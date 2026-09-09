@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>AI Assistant</title>
+  <link rel="stylesheet" href="css/ai-assistant.css">
+  <script src="../base/cockpit.js"></script>
+</head>
+<body>
+  <style>
+    #dlg{position:fixed;inset:0;background:rgba(2,10,20,.88);display:flex;
+         align-items:flex-start;justify-content:center;z-index:60;overflow:auto;padding:24px}
+    .dlg-card{max-width:680px;width:100%;margin:auto}
+    .step{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--bg2)}
+    .step .head{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+    .step .head input[type=checkbox]{margin-top:4px;width:auto;flex:none}
+    .step .ttl{font-weight:600}
+    .step .why{font-weight:400;color:var(--muted);font-size:.86rem;margin-top:2px}
+    .step .why.sub{color:var(--text)}
+    .step .warn{color:var(--amber);font-size:.86rem;margin-top:4px}
+    .step .btns{margin-top:8px;display:flex;gap:10px;align-items:center}
+    .step .b{font-size:.8rem;padding:4px 10px}
+    .step .st{font-size:.8rem;color:var(--muted)}
+    .step .st.ok{color:var(--cyan)}.step .st.err{color:var(--danger)}.step .st.run{color:var(--cyan)}
+    #setupOut{max-height:180px;overflow:auto;background:var(--bg3);border:1px solid var(--line);
+              border-radius:6px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:.78rem;margin-top:10px}
+    #setupOut .ok{color:var(--cyan)}#setupOut .e{color:var(--danger)}
+  </style>
+  <div class="card dlg-card">
+    <h2>Begleitetes Setup &mdash; AI Assistant</h2>
+    <div class="hint">Hier entscheidet <b>du</b>, was auf diesem Host passiert. Jeder Schritt steht da,
+      mit H&auml;kchen (ja/nein), Erkl&auml;rung was und warum &mdash; und oben kannst du alles
+      &uuml;berspringen. Nichts passiert ohne dein H&auml;kchen.</div>
+    <div id="steps"></div>
+    <div id="setupOut"></div>
+    <div class="row">
+      <button id="btnRun" class="btn primary">Ausgew&auml;hlte Schritte ausf&uuml;hren</button>
+      <button id="btnSkip" class="btn ghost">Setup &uuml;berspringen</button>
+      <button id="btnFinish" class="btn hidden">Schliessen &amp; weiter</button>
+    </div>
+  </div>
+<script src="js/setup.js"></script>
+</body>
+</html>
