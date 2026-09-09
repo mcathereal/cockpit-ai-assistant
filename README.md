@@ -68,7 +68,7 @@ Alternativ manuell (1 Befehl):
 
 ```bash
 git clone https://github.com/mcathereal/cockpit-ai-assistant
-sudo cp -r cockpit-ai-assistant/ai-assistant /usr/share/cockpit/ai-assistant
+sudo cp -r cockpit-ai-assistant /usr/share/cockpit/ai-assistant
 ```
 
 Browser neu laden → Menüpunkt **AI Assistant**. Kein Cockpit-Neustart nötig.
