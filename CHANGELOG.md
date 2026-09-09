@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **README encoding**: the file had been double-encoded (UTF-8 bytes read as CP850, then saved as UTF-8), which turned every umlaut and dash into mojibake. Repaired byte-exactly; all other files were verified to be clean and left untouched.
+- **Syntax highlighting** in chat code blocks: escaping ran before the highlight regexes, so the quotes inside the injected `<span class="...">` attributes were matched again and mangled the rendered markup. Replaced by a per-line token scanner.
+
+### Added
+- **README screenshots**, generated from the real UI.
+- **Screenshot tooling** (`tools/make-screenshots.ps1` + `tools/preview/cockpit-mock.js`): renders the actual plugin headlessly with only the Cockpit bridge replaced by fixed demo data. No Node, no build step, no Cockpit host needed.
+
 ## [1.0.0] - 2026-09-09
 
 First public release.
