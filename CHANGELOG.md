@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] - 2026-09-09
 
 ### Fixed
 - **README encoding**: the file had been double-encoded (UTF-8 bytes read as CP850, then saved as UTF-8), which turned every umlaut and dash into mojibake. Repaired byte-exactly; all other files were verified to be clean and left untouched.
@@ -12,6 +12,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Added
 - **README screenshots**, generated from the real UI.
 - **Screenshot tooling** (`tools/make-screenshots.ps1` + `tools/preview/cockpit-mock.js`): renders the actual plugin headlessly with only the Cockpit bridge replaced by fixed demo data. No Node, no build step, no Cockpit host needed.
+
+### Changed
+- **Icon in the installed UI**: the top bar and the floating button now use the neutral `icon-brain.svg` instead of the author's personal logo. The old `icon.svg` stays in the repository and is still used by the README and the screenshots; the preview mock swaps it back in so the pictures keep their look.
 
 ## [1.0.0] - 2026-09-09
 
@@ -43,4 +46,5 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.0.1]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/mcathereal/cockpit-ai-assistant/releases/tag/v1.0.0
