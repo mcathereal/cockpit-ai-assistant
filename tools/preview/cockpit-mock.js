@@ -294,7 +294,7 @@
             }), 400);
           }
           if (/releases\/latest$/.test(o.path)) {
-            return ok(JSON.stringify({ tag_name: "v1.0.0" }));
+            return ok(JSON.stringify({ tag_name: "v1.0.1" }));
           }
           return fail("Demo-HTTP: " + o.path);
         }
