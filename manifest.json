@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "requires": {
+    "cockpit": "265"
+  },
+  "content-security-policy": "default-src 'self' 'unsafe-inline'; img-src 'self' data:;",
+  "menus": {
+    "index.html": {
+      "label": "AI Assistant",
+      "order": 21,
+      "documentation": [
+        {
+          "label": "Projekt auf GitHub",
+          "url": "https://github.com/mcathereal/cockpit-ai-assistant"
+        }
+      ]
+    }
+  },
+  "superuser": {
+    "matches": {
+      "/usr/bin/virsh": "try",
+      "/usr/bin/journalctl": "try",
+      "/usr/bin/dmesg": "try",
+      "/usr/bin/systemctl": "try",
+      "/usr/bin/df": "try",
+      "/usr/bin/free": "try",
+      "/usr/bin/uptime": "try",
+      "/usr/bin/ip": "try",
+      "/usr/sbin/ip": "try",
+      "/usr/bin/mkdir": "try",
+      "/usr/bin/cp": "try",
+      "/usr/bin/rm": "try",
+      "/usr/bin/test": "try",
+      "/usr/bin/git": "try",
+      "/usr/bin/curl": "try",
+      "/usr/bin/dnf": "try",
+      "/usr/bin/apt-get": "try",
+      "/usr/bin/ollama": "try",
+      "/usr/bin/chmod": "try",
+      "/usr/bin/sh": "try",
+      "/usr/bin/whoami": "try"
+    }
+  }
+}

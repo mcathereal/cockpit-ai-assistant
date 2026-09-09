@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>AI Assistant</title>
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="css/ai-assistant.css">
+  <script src="../base/cockpit.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand">
+        <img src="icon.svg" alt="AI">
+        <span class="brand-name">AI <b>Assistant</b></span>
+        <span class="brand-sub">KVM&nbsp;/&nbsp;libvirt Assistent</span>
+      </div>
+      <div class="top-controls">
+        <span id="tokenBar" class="token-bar"></span>
+        <span id="updateBadge" class="update-badge hidden" title="Update verfuegbar">&#9650;</span>
+        <select id="profileSelect" title="LLM-Profil"></select>
+        <button id="btnSettings" class="btn ghost" title="LLM-Einstellungen">&#9881;</button>
+        <button id="btnAppearance" class="btn ghost" title="Darstellung: Position / Theme / Sprache">&#9681;</button>
+      </div>
+    </header>
+
+    <section id="appearance" class="card hidden">
+      <h2>Darstellung &amp; Sprache</h2>
+      <div class="grid2">
+        <label><span class="lbl">Ausstattung <em>wie und wo du den Chat &ouml;ffnest</em></span>
+          <select id="pPlace">
+            <option value="both">Seite &amp; Kachel (empfohlen)</option>
+            <option value="page">Nur als eigene Seite im Men&uuml;</option>
+            <option value="float">Nur als schwebende Kachel</option>
+          </select></label>
+        <label><span class="lbl">Kachel-Position <em>nur beim schwebenden Start</em></span>
+          <select id="pCorner">
+            <option value="rb">Unten rechts</option>
+            <option value="lb">Unten links</option>
+            <option value="rt">Oben rechts</option>
+            <option value="lt">Oben links</option>
+          </select></label>
+        <label><span class="lbl">Farbtheme</span>
+          <select id="pTheme">
+            <option value="auto">System / Cockpit folgen</option>
+            <option value="dark">Dunkel (Navy)</option>
+            <option value="light">Hell</option>
+          </select></label>
+        <label><span class="lbl">Sprache</span>
+          <select id="pLang">
+            <option value="auto">System folgen</option>
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select></label>
+      </div>
+      <div class="hint">Men&uuml; = Seite wie cockpit-machines (fest, LLM-Einstellungen inklusive).
+        Kachel = schwebendes Chat-Icon. &Auml;nderungen wirken sofort; der Men&uuml;eintrag der Seite bleibt bestehen.</div>
+    </section>
+
+    <section id="setupbar" class="card hidden">
+      <span class="hint">Setup wurde &uuml;bersprungen.</span>
+      <button id="btnSetup2" class="btn">&#9881; Setup starten</button>
+    </section>
+
+    <section id="updateSec" class="card hidden">
+      <div class="row"><button id="btnUpdate" class="btn">&#9650; Nach Update suchen</button>
+      <span id="updateOut" class="hint"></span></div>
+      <div class="hint">Installiert: v1.0.0 · Quelle: github.com/mcathereal/cockpit-ai-assistant</div>
+    </section>
+
+    <section id="settings" class="card hidden">
+      <h2>LLM-Profile &mdash; was passiert hier?</h2>
+      <div class="hint">Pro Profil ein <b>OpenAI-kompatibler</b> Endpunkt. &bdquo;Modelle laden&ldquo; ruft <code>GET /models</code>
+        ab (Ollama/vLLM/OpenRouter/DeepSeek/…). Stufen steuern, was das LLM darf.</div>
+      <div class="grid2">
+        <label><span class="lbl">Profilname <em>nur Anzeige im Dropdown oben</em></span>
+          <input id="pName" placeholder="z. B. Ollama lokal"></label>
+        <label><span class="lbl">Base-URL <em>Endpunkt, ohne /chat/completions</em></span>
+          <input id="pBaseUrl" placeholder="https://openrouter.ai/api/v1" list="presetUrls">
+          <datalist id="presetUrls">
+            <option value="https://openrouter.ai/api/v1"><option value="http://127.0.0.1:11434/v1">
+            <option value="http://127.0.0.1:8000/v1"><option value="https://api.deepseek.com/v1">
+          </datalist></label>
+        <label><span class="lbl">API-Key <em>OpenRouter/DeepSeek n&ouml;tig; Ollama meist leer</em></span>
+          <input id="pApiKey" type="password" placeholder="leer lassen = vorhanden"></label>
+        <label><span class="lbl">Speicherort des Keys <em>wird nach dem Speichern angezeigt</em></span>
+          <select id="pKeyStore" title="Coin = GNOME Keyring (headless meist N/A)">
+            <option value="user">Host-Datei (User-Login) &mdash; empfohlen</option>
+            <option value="coin">GNOME Keyring / libsecret</option>
+            <option value="browser">Nur dieser Browser</option>
+          </select></label>
+      </div>
+      <div class="hint" id="storeHint"></div>
+      <div class="row">
+        <label><span class="lbl">Modell <em>Manuell oder per &bdquo;laden&ldquo; aus der Liste</em></span>
+          <select id="pModelSel"></select>
+          <input id="pModel" list="modelList" placeholder="qwen2.5:14b"><datalist id="modelList"></datalist></label>
+        <button id="btnModels" class="btn">&#8635; Modelle laden</button>
+        <span id="testOut" class="hint"></span>
+      </div>
+      <div class="grid2">
+        <label><span class="lbl">Stufe (was darf das LLM?) <em>Empfehlung = Default</em></span>
+          <select id="pLevel">
+            <option value="off">Aus &mdash; Chat sendet nichts</option>
+            <option value="diagnose">Nur Diagnose &mdash; read-only Tools, keine Empfehlung</option>
+            <option value="advisory">Diagnose + Empfehlung &mdash; genauer Befehl + Risiko</option>
+            <option value="act">Diagnose + Aktion &mdash; start/shutdown/stop mit Best&auml;tigung</option>
+          </select></label>
+        <label><span class="lbl">Tool-Ausgabe filtern <em>Base64/IP/Passwort-Zeilen vor dem LLM entfernen</em></span>
+          <select id="pRedact"><option value="1">An &mdash; redigieren (empfohlen)</option><option value="0">Aus</option></select></label>
+      </div>
+      <div class="grid2">
+        <label><span class="lbl">Temperature <em>Kreativität: 0=präzise, 1=wild</em></span>
+          <input id="pTemp" type="number" step="0.1" min="0" max="2" placeholder="0.2"></label>
+        <label><span class="lbl">max. Tokens <em>max. Länge der Antwort</em></span>
+          <input id="pMaxTok" type="number" step="128" min="64" max="32768" placeholder="4096"></label>
+        <label><span class="lbl">top_p <em>Nucleus-Sampling: 0.9=90% Masse</em></span>
+          <input id="pTopP" type="number" step="0.05" min="0" max="1" placeholder="1.0"></label>
+      </div>
+      <div class="row"><span class="lbl">Granular: Funktionen einzeln erlauben (&Uuml;berschreibt Stufenlogik)</span></div>
+      <div class="toolgrid" id="toolBox"></div>
+      <div class="row">
+        <button id="btnSave" class="btn primary">Profil speichern</button>
+        <button id="btnDelete" class="btn danger">Profil l&ouml;schen</button>
+        <button id="btnAdd" class="btn">+ Neues Profil</button>
+      </div>
+    </section>
+
+
+    <section id="ctxbar" class="card">
+      <label>VM-Kontext <select id="vmSelect"><option value="">— keine —</option></select></label>
+      <button id="btnVmRefresh" class="btn ghost" title="VM-Liste aktualisieren">&#8635;</button>
+      <button id="btnAttach" class="btn">Kontext anh&auml;ngen</button>
+      <span class="hint">Kontext = dominfo + XML-Auszug + letzte Logzeilen der VM</span>
+    </section>
+
+    <section id="chatbar">
+      <div class="row">
+        <button id="btnNewChat" class="btn" title="Neuen Chat starten">+ Neuer Chat</button>
+        <input id="searchChats" type="search" placeholder="Chats durchsuchen...">
+        <span id="chatCount" class="hint"></span>
+      </div>
+      <div id="chatTabs"></div>
+    </section>
+
+    <main id="chat" aria-live="polite"></main>
+
+    <footer id="inputbar">
+      <div id="quick">
+        <select id="templateSel" class="btn" title="Chat-Vorlagen fuer Distributionen/Copilot"><option value="">Vorlage...</option></select>
+        <button class="chip">Warum startet die VM nicht?</button>
+        <button class="chip">Host-Status pr&uuml;fen</button>
+        <button class="chip">Netzwerk-Konfiguration pr&uuml;fen</button>
+        <button class="chip">Letzte Logzeilen analysieren</button>
+      </div>
+      <div class="compose">
+        <textarea id="prompt" rows="2" placeholder="Frage den AI Assistant …  (Strg+Enter sendet)"></textarea>
+        <button id="btnSend" class="btn primary">Senden</button>
+      </div>
+    </footer>
+  </div>
+
+  <div id="modal" class="hidden">
+    <div class="modal-card card">
+      <h2 id="modalTitle">Aktion best&auml;tigen</h2>
+      <p id="modalText"></p>
+      <pre id="modalCmd"></pre>
+      <div class="row">
+        <button id="modalOk" class="btn primary">Ausf&uuml;hren</button>
+        <button id="modalCancel" class="btn">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/agent.js"></script>
+</body>
+</html>
