@@ -148,17 +148,51 @@
     }, TYPEWRITER_SPEED);
   }
 
+  const SH_KW = "\\b(?:virsh|systemctl|journalctl|dmesg|df|free|uptime|ip|curl|grep|awk|sed|find|cat|tail|head|nc|dig|ping|ss|netstat|tcpdump|dnf|apt-get|ollama)\\b";
+
+  function hlWords(s) {
+    return esc(s).replace(new RegExp("(-{1,2}[A-Za-z][A-Za-z0-9._-]*)|" + SH_KW, "g"),
+      (m, flag) => flag ? '<span class="sh-fl">' + flag + "</span>" : '<span class="sh-kw">' + m + "</span>");
+  }
+
+  /* Ein Token-Scanner pro Zeile: String > Kommentar > Wort. Bewusst keine
+   * Regex-Kette ueber den Gesamttext - die hat HTML-Spans erneut gematcht. */
+  function hlLine(raw) {
+    if (raw.charAt(0) === "$") raw = raw.slice(1);
+    let out = "";
+    let i = 0;
+    const n = raw.length;
+    while (i < n) {
+      const ch = raw.charAt(i);
+      if (ch === "#") { out += '<span class="sh-cm">' + esc(raw.slice(i)) + "</span>"; break; }
+      if (ch === '"' || ch === "'") {
+        let j = i + 1;
+        while (j < n) {
+          if (raw.charAt(j) === "\\") { j += 2; continue; }
+          if (raw.charAt(j) === ch) { j++; break; }
+          j++;
+        }
+        out += '<span class="sh-st">' + esc(raw.slice(i, j)) + "</span>";
+        i = j; continue;
+      }
+      let j = i;
+      while (j < n && raw.charAt(j) !== '"' && raw.charAt(j) !== "'" && raw.charAt(j) !== "#") j++;
+      out += hlWords(raw.slice(i, j));
+      i = j;
+    }
+    return out;
+  }
+
   function highlightSyntax(container) {
-    const pres = container.querySelectorAll("pre");
-    pres.forEach(pre => {
-      let html = esc(pre.textContent);
-      html = html
-        .replace(/#[^\n]*/g, '<span class="sh-cm">$&</span>')
-        .replace(/(^|\n)(\$|#)\s*(.*)/g, '$1<span class="sh-pr">$2</span> $3')
-        .replace(/\b(virsh|systemctl|journalctl|dmesg|df|free|ip|curl|grep|awk|sed|find|cat|tail|head|nc|dig|ping|ss|netstat|tcpdump)\b/g, '<span class="sh-kw">$1</span>')
-        .replace(/\b(-{1,2}[a-zA-Z][a-zA-Z0-9._-]*)\b/g, '<span class="sh-fl">$1</span>')
-        .replace(/("(?:[^"]|\\")*"|&apos;(?:[^']|\\')*&apos;)/g, '<span class="sh-st">$1</span>');
-      pre.innerHTML = html;
+    container.querySelectorAll("pre").forEach(pre => {
+      const raw = String(pre.textContent);
+      const first = /^\s*\$\s/.test(raw);
+      pre.innerHTML = raw.split("\n").map((line, k) => {
+        if (k === 0 && first) {
+          return '<span class="sh-pr">$</span>' + hlLine(line.replace(/^\s*\$\s/, " "));
+        }
+        return hlLine(line);
+      }).join("\n");
     });
   }
 
