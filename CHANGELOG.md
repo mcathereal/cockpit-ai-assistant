@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-09-10
+
+### Fixed
+- **LLM and update calls went out via SSH instead of HTTP**: `cockpit.http()` was called with the `host` option, which Cockpit's router interprets as a remote machine (spawning `ssh … port 22`), so every chat/model/update request died with `[Errno 110] ssh: connect to host … port 22`. Now uses the `address` option, which the bridge's HTTP channel connects to directly.
+- **`tls: false` crashed the HTTP channel**: the bridge expects a dict for `tls`; anything else is a protocol error. For `http://` endpoints the `tls` key is now omitted entirely instead of being set to `false`.
+
+### Changed
+- **API keys persist across reboots**: key files moved from tmpfs (`/run/ai-assistant`) to `/var/lib/cockpit/ai-assistant-keys/<user>.json` (directory `0700`, file `0600`). No automatic migration — previously stored keys need to be entered once again.
+- **Hardening**: removed `/usr/bin/sh` from `superuser.matches` — no code path spawns a shell.
+
 ## [1.0.2] - 2026-09-10
 
 ### Fixed
@@ -59,6 +69,7 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.0.3]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/mcathereal/cockpit-ai-assistant/releases/tag/v1.0.0

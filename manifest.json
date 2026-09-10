@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "requires": {
     "cockpit": "265"
   },
@@ -25,7 +25,6 @@
       "/usr/bin/apt-get": "try",
       "/usr/bin/ollama": "try",
       "/usr/bin/chmod": "try",
-      "/usr/bin/sh": "try",
       "/usr/bin/whoami": "try"
     }
   },

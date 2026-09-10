@@ -93,7 +93,7 @@ Alles lokal in `localStorage` gespeichert — pro Browser, sofort wirksam, ohne 
 
 | Ebene | Umsetzung |
 |---|---|
-| **Keys** | **Niemals** im Browser, nie im HTML/JS. Primär: Serverdatei pro Login-User auf tmpfs (`/run/ai-assistant/<user>.json`, `chmod 600`, nach Logout weg). Fallback: `localStorage` des Browsers + Warnhinweis. |
+| **Keys** | **Niemals** im Browser, nie im HTML/JS. Primär: persistente Serverdatei pro Login-User (`/var/lib/cockpit/ai-assistant-keys/<user>.json`, Verzeichnis `0700`, Datei `0600`, überlebt Reboot). Fallback: `localStorage` des Browsers + Warnhinweis. |
 | **LLM-Zugriff** | Stufe `off` / `diagnose` / `advisory` (Default) / `act`. Granular pro Tool abwählbar. Write-Tools (`vm_*`) immer GUI-bestätigt, `superuser:"try"` nur auf deklarierten Pfaden. |
 | **Datenweg** | Tool-Ausgaben werden vor Rückgabe ans LLM **redacted** (Base64-Sequenzen, IPs, `password=`-Zeilen) und auf `tail`-Größen gecappt. |
 | **Stabilität** | spawn-timeout 30 s, LLM-Timeout 120 s, Chat-FIFO (24 Meldungen), jede Fehlerstelle → saubere Fehlerbox statt weißer Bildschirm. |

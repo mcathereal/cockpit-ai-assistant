@@ -17,7 +17,7 @@
   const LS_KEY = "ai-assistant-settings";
   const LS_UI = "ai-assistant-ui";
   const COIN_SERVICE = "ai-assistant";
-  const RUN_KEY_DIR = "/run/ai-assistant";
+  const KEY_DIR = "/var/lib/cockpit/ai-assistant-keys";
   const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_.:@-]{0,63}$/;
   const UNIT_RE = /^[A-Za-z0-9@_.:+-]{1,64}$/;
   const TEMPLATE_RE = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
@@ -33,7 +33,7 @@
     lang: "auto"            // auto | de | en
   };
   let ui = JSON.parse(JSON.stringify(DEFAULT_UI));
-  const VERSION = "1.0.2";
+  const VERSION = "1.0.3";
   const GH_REPO = "mcathereal/cockpit-ai-assistant";
   const TYPEWRITER_SPEED = 18;     // ms pro Zeichen
   let totalTokens = 0;
@@ -382,7 +382,7 @@
           })).catch(() => { keyCache[p.name] = loadKeyLS(p); return loadKeyLS(p); });
       } catch (e) { keyCache[p.name] = loadKeyLS(p); return Promise.resolve(loadKeyLS(p)); }
     }
-    /* user: serverseitige, pro Linux-User getrennte Datei (tmpfs /run) */
+    /* user: serverseitige, pro Linux-User getrennte Datei (persistent unter /var/lib/cockpit) */
     return runKeyPath().then(path =>
       cockpit.file(path, { superuser: "try" }).read().then(txt => {
         let m = {};
@@ -396,18 +396,18 @@
   function runKeyPath() {
     return Promise.resolve()
       .then(() => cockpit.spawn ? cockpit.spawn(["whoami"], { timeout: 5 }).catch(() => "anon") : "anon")
-      .then(u => { u = String(u).replace(/[^A-Za-z0-9_.-]/g, "") || "anon"; return RUN_KEY_DIR + "/" + u + ".json"; });
+      .then(u => { u = String(u).replace(/[^A-Za-z0-9_.-]/g, "") || "anon"; return KEY_DIR + "/" + u + ".json"; });
   }
 
   function saveRunKey(p, key) {
     return runKeyPath().then(path =>
-      cockpit.spawn(["mkdir", "-p", RUN_KEY_DIR], { superuser: "try", err: "message" }).catch(() => {}).then(() =>
+      cockpit.spawn(["mkdir", "-p", KEY_DIR], { superuser: "try", err: "message" }).catch(() => {}).then(() =>
         cockpit.file(path, { superuser: "try", create: true }).read().then(txt => {
           let m = {}; try { m = JSON.parse(txt || "{}"); } catch (e) { m = {}; }
           if (key) m[p.baseUrl] = key; else delete m[p.baseUrl];
           return cockpit.file(path, { superuser: "try", create: true }).replace(JSON.stringify(m, null, 2));
         }).then(() => {
-          cockpit.spawn(["chmod", "700", RUN_KEY_DIR], { superuser: "try", err: "message" }).catch(() => {});
+          cockpit.spawn(["chmod", "700", KEY_DIR], { superuser: "try", err: "message" }).catch(() => {});
           cockpit.spawn(["chmod", "600", path], { superuser: "try", err: "message" }).catch(() => {});
         })
       )
@@ -446,7 +446,7 @@
 
   function storeStatus(p) {
     const notes = {
-      user: "Serverdatei pro Cockpit-Login-User (tmpfs /run, chmod 600, nach Logout weg). Empfohlen — funktioniert auf Headless-Hosts.",
+      user: "Serverdatei pro Cockpit-Login-User (/var/lib/cockpit, chmod 600, bleibt nach Reboot). Empfohlen — funktioniert auf Headless-Hosts.",
       coin: "GNOME Keyring/libsecret ueber cockpit.secrets. Desktop-Hosts; auf Headless-KVM meist nicht verfuegbar.",
       browser: "Nur in DIESEM Browser (localStorage). Anderer Browser = kein Key. Nur Fallback."
     };
@@ -499,7 +499,9 @@
 
   function http(p) {
     const u = parseUrl(p.baseUrl);
-    return { c: cockpit.http({ host: u.host, port: u.port, tls: u.tls }), path: u.base };
+    const opts = { address: u.host, port: u.port };
+    if (u.tls) opts.tls = u.tls;
+    return { c: cockpit.http(opts), path: u.base };
   }
 
   function llmChat(p, body, key) {
@@ -1041,7 +1043,7 @@
   /* ---------------- Updater &amp; Token-Bar ---------------- */
 
   function checkUpdate() {
-    const h = cockpit.http({ host: "api.github.com", port: 443, tls: {} });
+    const h = cockpit.http({ address: "api.github.com", port: 443, tls: {} });
     return h.request({
       method: "GET",
       path: "/repos/" + GH_REPO + "/releases/latest",
