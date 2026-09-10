@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "requires": {
     "cockpit": "265"
   },
-  "content-security-policy": "default-src 'self' 'unsafe-inline'; img-src 'self' data:;",
+  "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; base-uri 'self';",
   "superuser": {
     "matches": {
       "/usr/bin/virsh": "try",
