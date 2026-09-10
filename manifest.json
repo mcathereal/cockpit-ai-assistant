@@ -4,18 +4,6 @@
     "cockpit": "265"
   },
   "content-security-policy": "default-src 'self' 'unsafe-inline'; img-src 'self' data:;",
-  "menus": {
-    "index.html": {
-      "label": "AI Assistant",
-      "order": 21,
-      "documentation": [
-        {
-          "label": "Projekt auf GitHub",
-          "url": "https://github.com/mcathereal/cockpit-ai-assistant"
-        }
-      ]
-    }
-  },
   "superuser": {
     "matches": {
       "/usr/bin/virsh": "try",
@@ -39,6 +27,31 @@
       "/usr/bin/chmod": "try",
       "/usr/bin/sh": "try",
       "/usr/bin/whoami": "try"
+    }
+  },
+  "tools": {
+    "index": {
+      "label": "🤖 AI Assistant",
+      "order": 1001,
+      "docs": [
+        {
+          "label": "Projekt auf GitHub",
+          "url": "https://github.com/mcathereal/cockpit-ai-assistant"
+        }
+      ],
+      "keywords": [
+        {
+          "matches": [
+            "ai",
+            "assistant",
+            "chat",
+            "llm",
+            "kvm",
+            "vm",
+            "ki"
+          ]
+        }
+      ]
     }
   }
 }

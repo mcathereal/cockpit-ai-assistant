@@ -50,7 +50,7 @@
       defaultOn: true,
       warn: "Laedt Code von github.com (HTTPS, ohne Zugangsdaten).",
       run: async () => {
-        await run(["rm", "-rf", "/tmp/ai-assistant-src"]);
+        log("Deaktiviert: kein Re-Download - Plugin ist bereits installiert.", "ok"); return;
         await run(["git", "clone", "--depth", "1", REPO, "/tmp/ai-assistant-src"]);
       }
     },
@@ -61,7 +61,7 @@
       defaultOn: true,
       warn: "Eine alte Version wird gesichert, nicht geloescht.",
       run: async () => {
-        const has = await run(["test", "-d", DEST]).then(() => true, () => false);
+        log("Deaktiviert: keine Neuinstallation - wuerde lokale Fixes ueberschreiben.", "ok"); return;
         if (has) {
           const stamp = Math.floor(Date.now() / 1000);
           await run(["mkdir", "-p", "/var/lib/ai-assistant-backup"]);

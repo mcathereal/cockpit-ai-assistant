@@ -877,7 +877,14 @@
     fillForm();
   }
 
+  let _filling = false;
   function fillForm() {
+    if (_filling) return;
+    _filling = true;
+    try { _fillFormInner(); } finally { _filling = false; }
+  }
+
+  function _fillFormInner() {
     const p = settings.profiles[settings.active] || {};
     $("#pName").value = p.name || "";
     $("#pBaseUrl").value = p.baseUrl || "";
