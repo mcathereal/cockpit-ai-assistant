@@ -33,7 +33,7 @@
     lang: "auto"            // auto | de | en
   };
   let ui = JSON.parse(JSON.stringify(DEFAULT_UI));
-  const VERSION = "1.0.1";
+  const VERSION = "1.0.2";
   const GH_REPO = "mcathereal/cockpit-ai-assistant";
   const TYPEWRITER_SPEED = 18;     // ms pro Zeichen
   let totalTokens = 0;
@@ -401,13 +401,16 @@
 
   function saveRunKey(p, key) {
     return runKeyPath().then(path =>
-      cockpit.file(path, { superuser: "try", create: true }).read().then(txt => {
-        let m = {}; try { m = JSON.parse(txt || "{}"); } catch (e) { m = {}; }
-        if (key) m[p.baseUrl] = key; else delete m[p.baseUrl];
-        return cockpit.file(path, { superuser: "try", create: true }).replace(JSON.stringify(m, null, 2));
-      }).then(() => {
-        cockpit.spawn(["chmod", "600", path], { superuser: "try", err: "message" }).catch(() => {});
-      })
+      cockpit.spawn(["mkdir", "-p", RUN_KEY_DIR], { superuser: "try", err: "message" }).catch(() => {}).then(() =>
+        cockpit.file(path, { superuser: "try", create: true }).read().then(txt => {
+          let m = {}; try { m = JSON.parse(txt || "{}"); } catch (e) { m = {}; }
+          if (key) m[p.baseUrl] = key; else delete m[p.baseUrl];
+          return cockpit.file(path, { superuser: "try", create: true }).replace(JSON.stringify(m, null, 2));
+        }).then(() => {
+          cockpit.spawn(["chmod", "700", RUN_KEY_DIR], { superuser: "try", err: "message" }).catch(() => {});
+          cockpit.spawn(["chmod", "600", path], { superuser: "try", err: "message" }).catch(() => {});
+        })
+      )
     );
   }
 
@@ -451,7 +454,7 @@
       whoAmI(),
       Promise.resolve().then(() => (typeof cockpit.secrets !== "undefined" && !!cockpit.secrets)).catch(() => false)
     ]).then(r => {
-      const line = { user: "Cockpit-User: " + r[0], coin: r[1] ? "Keyring verfuegbar" : "Keyring NICHT verfuegbar", browser: "Browser-Profil aktiv" };
+      const line = { user: "Cockpit-User: " + esc(r[0]), coin: r[1] ? "Keyring verfuegbar" : "Keyring NICHT verfuegbar", browser: "Browser-Profil aktiv" };
       return "<b>" + (notes[p.keyStore] || "") + "</b><br><span class='hint'>" + line[p.keyStore] + "</span>";
     });
   }
@@ -1071,9 +1074,9 @@
   }
 
   window.addEventListener("message", e => {
-    if (e.data && e.data.mbmSetup === "done") {
-      const f = document.querySelector("#setupFrame");
-      if (f) f.remove();
+    const f = document.querySelector("#setupFrame");
+    if (f && e.source === f.contentWindow && e.data && e.data.mbmSetup === "done") {
+      f.remove();
       let state = "";
       try { state = localStorage.getItem(LS_SETUP) || ""; } catch (err) { /* ignore */ }
       if (state === "skipped") $("#setupbar").classList.remove("hidden");

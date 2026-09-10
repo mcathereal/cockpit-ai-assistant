@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-09-10
+
+### Fixed
+- **Sidebar entry never appeared / opened a blank page**: the manifest used `"menus"` with key `index.html`. Cockpit expects `menu`/`tools` (singular) and the shell appends `.html` itself, so the entry was invisible (`menus` is unknown to Cockpit) and the old key would have compiled to `ai-assistant/index.html.html` (404). Now a `tools` entry with key `index` (bottom section, order 1001), a robot emoji as icon (manifests support no icon field) and the GitHub link under the official `docs` key.
+- **Stack overflow in the settings form**: `fillForm()` called `onLevelChange()` which called `fillForm()` back; with a `tools` array present (checkbox touched or new profile) the recursion never ended ("Maximum call stack size exceeded"). Added a re-entrancy guard.
+- **Setup wizard overwrote the running installation**: the download+install steps (checked by default) re-cloned the repo over `/usr/share/cockpit/ai-assistant`, silently reverting local fixes. Both steps now log why they are disabled; package, cockpit-restart and Ollama steps still work.
+
+### Security
+- **Stricter CSP**: no `'unsafe-inline'` for scripts anymore (`script-src 'self'`); inline styles stay allowed (`style-src 'self' 'unsafe-inline'`, needed by `setup.html` and the mode badges). Added `connect-src 'self' ws: wss:` (Cockpit websocket transport), `object-src 'none'`, `base-uri 'self'`.
+- **postMessage handshake hardened**: `agent.js` now checks `e.source` against the setup iframe window, and `setup.js` posts to the explicit same origin instead of `"*"`.
+- **API-key directory**: `/run/ai-assistant` is now created with `mkdir -p` and locked to `0700` (key files `0600`). Before, a missing directory silently fell back to storing keys in browser localStorage.
+- Session user name is HTML-escaped in the key-store hint.
+
 ## [1.0.1] - 2026-09-09
 
 ### Fixed
@@ -46,5 +59,6 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.0.2]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/mcathereal/cockpit-ai-assistant/releases/tag/v1.0.0
