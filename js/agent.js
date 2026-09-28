@@ -33,7 +33,7 @@
     lang: "auto"            // auto | de | en
   };
   let ui = JSON.parse(JSON.stringify(DEFAULT_UI));
-  const VERSION = "1.0.3";
+  const VERSION = "1.1.0";
   const GH_REPO = "mcathereal/cockpit-ai-assistant";
   const TYPEWRITER_SPEED = 18;     // ms pro Zeichen
   let totalTokens = 0;
@@ -933,6 +933,11 @@
   function wire() {
     $("#btnSettings").onclick = () => { $("#settings").classList.toggle("hidden"); $("#appearance").classList.add("hidden"); };
     $("#btnAppearance").onclick = () => { $("#appearance").classList.toggle("hidden"); $("#settings").classList.add("hidden"); };
+    $("#btnTheme").onclick = () => {
+      ui.theme = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      const sel = $("#pTheme"); if (sel) sel.value = ui.theme;
+      saveUI();
+    };
     $("#pPlace").onchange = e => { ui.place = e.target.value; saveUI(); };
     $("#pCorner").onchange = e => { ui.corner = e.target.value; saveUI(); };
     $("#pTheme").onchange = e => { ui.theme = e.target.value; saveUI(); };
@@ -998,8 +1003,13 @@
 
     $("#btnSend").onclick = submit;
     $("#prompt").addEventListener("keydown", e => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); }
     });
+    $("#settingsHead").onclick = () => $("#settings").classList.toggle("collapsed");
+    const bar = $("#inputbar");
+    const setBarH = () => document.documentElement.style.setProperty("--bar-h", bar.offsetHeight + "px");
+    if (window.ResizeObserver) new ResizeObserver(setBarH).observe(bar);
+    setBarH();
     document.querySelectorAll("#quick .chip").forEach(c => {
       c.onclick = () => { $("#prompt").value = c.textContent; $("#prompt").focus(); };
     });

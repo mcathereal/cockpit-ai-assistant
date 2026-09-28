@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-28
+
+### Changed
+- **New UI in the MBM house style**, adopted from *MBM Call AI* (`mbm/call.ai`): shared design tokens as `R G B` triplets (`rgb(var(--t-*) / α)`), panel/line/accent palette for light **and** dark, a soft accent glow, and the Call-AI gradient/sweep header. Theme switching is now a single `data-theme` attribute on `<html>` (dark stays the default, so there is no light flash on load).
+- **Cleaner, roomier layout**: sticky translucent top bar, 1080 px content column, section cards with soft shadow and a subtle entrance animation, message bubbles that fade/slide in, pill-shaped chat tabs and chips, stronger button variants.
+- **Details moved behind icons and disclosures**: the top bar now carries icon-only controls (theme, settings, appearance, update). Inside *LLM-Profile*, key storage, model loading and sampling/per-tool checkboxes live in collapsible `Erweitert` sections.
+
+### Added
+- **Quick theme toggle** in the top bar (`#btnTheme`, sun/moon icons), stored with the existing appearance settings.
+
 ## [1.0.3] - 2026-09-10
 
 ### Fixed
@@ -69,6 +79,7 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.1.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.0...v1.0.1

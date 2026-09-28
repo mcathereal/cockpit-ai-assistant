@@ -12,20 +12,33 @@
     <header id="topbar">
       <div class="brand">
         <img src="icon-brain.svg" alt="AI">
-        <span class="brand-name">AI <b>Assistant</b></span>
-        <span class="brand-sub">KVM&nbsp;/&nbsp;libvirt Assistent</span>
+        <div class="brand-text">
+          <h1 class="brand-name">AI <b>Assistant</b></h1>
+          <span class="brand-sub">KVM&nbsp;/&nbsp;libvirt Assistent</span>
+        </div>
       </div>
       <div class="top-controls">
         <span id="tokenBar" class="token-bar"></span>
-        <span id="updateBadge" class="update-badge hidden" title="Update verfuegbar">&#9650;</span>
+        <button id="updateBadge" class="icon-btn update-badge hidden" title="Update verf&uuml;gbar">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V5M6 11l6-6 6 6"/></svg>
+        </button>
+        <span class="ctrl-sep"></span>
         <select id="profileSelect" title="LLM-Profil"></select>
-        <button id="btnSettings" class="btn ghost" title="LLM-Einstellungen">&#9881;</button>
-        <button id="btnAppearance" class="btn ghost" title="Darstellung: Position / Theme / Sprache">&#9681;</button>
+        <button id="btnTheme" class="icon-btn" title="Hell / Dunkel umschalten" aria-label="Theme umschalten">
+          <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M5 5l1.7 1.7M17.3 17.3 19 19M2.8 12h2.4M18.8 12h2.4M5 19l1.7-1.7M17.3 6.7 19 5"/></svg>
+          <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 14.6A8.8 8.8 0 0 1 9.4 3.6a8.8 8.8 0 1 0 11 11z"/></svg>
+        </button>
+        <button id="btnSettings" class="icon-btn" title="LLM-Einstellungen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button id="btnAppearance" class="icon-btn" title="Darstellung &amp; Sprache">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        </button>
       </div>
     </header>
 
     <section id="appearance" class="card hidden">
-      <h2>Darstellung &amp; Sprache</h2>
+      <div class="section-head"><h2>Darstellung &amp; Sprache</h2></div>
       <div class="grid2">
         <label><span class="lbl">Ausstattung <em>wie und wo du den Chat &ouml;ffnest</em></span>
           <select id="pPlace">
@@ -57,21 +70,14 @@
         Kachel = schwebendes Chat-Icon. &Auml;nderungen wirken sofort; der Men&uuml;eintrag der Seite bleibt bestehen.</div>
     </section>
 
-    <section id="setupbar" class="card hidden">
-      <span class="hint">Setup wurde &uuml;bersprungen.</span>
-      <button id="btnSetup2" class="btn">&#9881; Setup starten</button>
-    </section>
-
-    <section id="updateSec" class="card hidden">
-      <div class="row"><button id="btnUpdate" class="btn">&#9650; Nach Update suchen</button>
-      <span id="updateOut" class="hint"></span></div>
-      <div class="hint">Installiert: v1.0.3 · Quelle: github.com/mcathereal/cockpit-ai-assistant</div>
-    </section>
-
     <section id="settings" class="card hidden">
-      <h2>LLM-Profile &mdash; was passiert hier?</h2>
+      <h2 class="collapse-head" id="settingsHead">
+        <span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+        LLM-Profile
+      </h2>
       <div class="hint">Pro Profil ein <b>OpenAI-kompatibler</b> Endpunkt. &bdquo;Modelle laden&ldquo; ruft <code>GET /models</code>
-        ab (Ollama/vLLM/OpenRouter/DeepSeek/…). Stufen steuern, was das LLM darf.</div>
+        ab (Ollama/vLLM/OpenRouter/DeepSeek/&hellip;). Stufen steuern, was das LLM darf.</div>
+
       <div class="grid2">
         <label><span class="lbl">Profilname <em>nur Anzeige im Dropdown oben</em></span>
           <input id="pName" placeholder="z. B. Ollama lokal"></label>
@@ -81,23 +87,40 @@
             <option value="https://openrouter.ai/api/v1"><option value="http://127.0.0.1:11434/v1">
             <option value="http://127.0.0.1:8000/v1"><option value="https://api.deepseek.com/v1">
           </datalist></label>
-        <label><span class="lbl">API-Key <em>OpenRouter/DeepSeek n&ouml;tig; Ollama meist leer</em></span>
-          <input id="pApiKey" type="password" placeholder="leer lassen = vorhanden"></label>
-        <label><span class="lbl">Speicherort des Keys <em>wird nach dem Speichern angezeigt</em></span>
-          <select id="pKeyStore" title="Coin = GNOME Keyring (headless meist N/A)">
-            <option value="user">Host-Datei (User-Login) &mdash; empfohlen</option>
-            <option value="coin">GNOME Keyring / libsecret</option>
-            <option value="browser">Nur dieser Browser</option>
-          </select></label>
       </div>
-      <div class="hint" id="storeHint"></div>
-      <div class="row">
-        <label><span class="lbl">Modell <em>Manuell oder per &bdquo;laden&ldquo; aus der Liste</em></span>
-          <select id="pModelSel"></select>
-          <input id="pModel" list="modelList" placeholder="qwen2.5:14b"><datalist id="modelList"></datalist></label>
-        <button id="btnModels" class="btn">&#8635; Modelle laden</button>
-        <span id="testOut" class="hint"></span>
-      </div>
+
+      <details class="advanced">
+        <summary>Zugang &amp; Schl&uuml;ssel</summary>
+        <div class="advanced-body">
+          <div class="grid2">
+            <label><span class="lbl">API-Key <em>OpenRouter/DeepSeek n&ouml;tig; Ollama meist leer</em></span>
+              <input id="pApiKey" type="password" placeholder="leer lassen = vorhanden"></label>
+            <label><span class="lbl">Speicherort des Keys <em>wird nach dem Speichern angezeigt</em></span>
+              <select id="pKeyStore" title="Coin = GNOME Keyring (headless meist N/A)">
+                <option value="user">Host-Datei (User-Login) &mdash; empfohlen</option>
+                <option value="coin">GNOME Keyring / libsecret</option>
+                <option value="browser">Nur dieser Browser</option>
+              </select></label>
+          </div>
+          <div class="hint" id="storeHint"></div>
+        </div>
+      </details>
+
+      <details class="advanced">
+        <summary>Modell</summary>
+        <div class="advanced-body">
+          <div class="row">
+            <label><span class="lbl">Modell <em>manuell oder per &bdquo;laden&ldquo; aus der Liste</em></span>
+              <select id="pModelSel"></select>
+              <input id="pModel" list="modelList" placeholder="qwen2.5:14b"><datalist id="modelList"></datalist></label>
+            <button id="btnModels" class="btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
+              Modelle laden</button>
+          </div>
+          <div class="hint" id="testOut"></div>
+        </div>
+      </details>
+
       <div class="grid2">
         <label><span class="lbl">Stufe (was darf das LLM?) <em>Empfehlung = Default</em></span>
           <select id="pLevel">
@@ -109,35 +132,50 @@
         <label><span class="lbl">Tool-Ausgabe filtern <em>Base64/IP/Passwort-Zeilen vor dem LLM entfernen</em></span>
           <select id="pRedact"><option value="1">An &mdash; redigieren (empfohlen)</option><option value="0">Aus</option></select></label>
       </div>
-      <div class="grid2">
-        <label><span class="lbl">Temperature <em>Kreativität: 0=präzise, 1=wild</em></span>
-          <input id="pTemp" type="number" step="0.1" min="0" max="2" placeholder="0.2"></label>
-        <label><span class="lbl">max. Tokens <em>max. Länge der Antwort</em></span>
-          <input id="pMaxTok" type="number" step="128" min="64" max="32768" placeholder="4096"></label>
-        <label><span class="lbl">top_p <em>Nucleus-Sampling: 0.9=90% Masse</em></span>
-          <input id="pTopP" type="number" step="0.05" min="0" max="1" placeholder="1.0"></label>
-      </div>
-      <div class="row"><span class="lbl">Granular: Funktionen einzeln erlauben (&Uuml;berschreibt Stufenlogik)</span></div>
-      <div class="toolgrid" id="toolBox"></div>
+
+      <details class="advanced">
+        <summary>Erweitert: Sampling &amp; einzelne Funktionen</summary>
+        <div class="advanced-body">
+          <div class="grid2">
+            <label><span class="lbl">Temperature <em>Kreativit&auml;t: 0=pr&auml;zise, 1=wild</em></span>
+              <input id="pTemp" type="number" step="0.1" min="0" max="2" placeholder="0.2"></label>
+            <label><span class="lbl">max. Tokens <em>max. L&auml;nge der Antwort</em></span>
+              <input id="pMaxTok" type="number" step="128" min="64" max="32768" placeholder="4096"></label>
+            <label><span class="lbl">top_p <em>Nucleus-Sampling: 0.9=90% Masse</em></span>
+              <input id="pTopP" type="number" step="0.05" min="0" max="1" placeholder="1.0"></label>
+          </div>
+          <div class="hint">Granular: Funktionen einzeln erlauben (&uuml;berschreibt die Stufenlogik).</div>
+          <div class="toolgrid" id="toolBox"></div>
+        </div>
+      </details>
+
       <div class="row">
-        <button id="btnSave" class="btn primary">Profil speichern</button>
-        <button id="btnDelete" class="btn danger">Profil l&ouml;schen</button>
+        <button id="btnSave" class="btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          Profil speichern</button>
         <button id="btnAdd" class="btn">+ Neues Profil</button>
+        <button id="btnDelete" class="btn danger">Profil l&ouml;schen</button>
       </div>
     </section>
 
+    <section id="setupbar" class="card hidden">
+      <span class="hint">Setup wurde &uuml;bersprungen.</span>
+      <button id="btnSetup2" class="btn">Setup starten</button>
+    </section>
 
     <section id="ctxbar" class="card">
-      <label>VM-Kontext <select id="vmSelect"><option value="">— keine —</option></select></label>
-      <button id="btnVmRefresh" class="btn ghost" title="VM-Liste aktualisieren">&#8635;</button>
+      <label><span class="lbl">VM-Kontext <em>domin-info + XML-Auszug + letzte Logzeilen</em></span>
+        <select id="vmSelect"><option value="">&mdash; keine &mdash;</option></select></label>
+      <button id="btnVmRefresh" class="icon-btn" title="VM-Liste aktualisieren">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
+      </button>
       <button id="btnAttach" class="btn">Kontext anh&auml;ngen</button>
-      <span class="hint">Kontext = dominfo + XML-Auszug + letzte Logzeilen der VM</span>
     </section>
 
     <section id="chatbar">
       <div class="row">
         <button id="btnNewChat" class="btn" title="Neuen Chat starten">+ Neuer Chat</button>
-        <input id="searchChats" type="search" placeholder="Chats durchsuchen...">
+        <input id="searchChats" type="search" placeholder="Chats durchsuchen&hellip;">
         <span id="chatCount" class="hint"></span>
       </div>
       <div id="chatTabs"></div>
@@ -145,17 +183,38 @@
 
     <main id="chat" aria-live="polite"></main>
 
-    <footer id="inputbar">
-      <div id="quick">
-        <select id="templateSel" class="btn" title="Chat-Vorlagen fuer Distributionen/Copilot"><option value="">Vorlage...</option></select>
-        <button class="chip">Warum startet die VM nicht?</button>
-        <button class="chip">Host-Status pr&uuml;fen</button>
-        <button class="chip">Netzwerk-Konfiguration pr&uuml;fen</button>
-        <button class="chip">Letzte Logzeilen analysieren</button>
+    <footer class="app-footer">
+      <span class="mono">AI Assistant v1.1.0 &middot; KVM / libvirt</span>
+      <span class="spacer"></span>
+      <a href="https://github.com/mcathereal/cockpit-ai-assistant" target="_blank" rel="noreferrer">GitHub</a>
+    </footer>
+
+    <section id="updateSec" class="card hidden">
+      <div class="section-head"><h2>Update</h2></div>
+      <div class="row">
+        <button id="btnUpdate" class="btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V5M6 11l6-6 6 6"/></svg>
+          Nach Update suchen</button>
+        <span id="updateOut" class="hint"></span>
       </div>
-      <div class="compose">
-        <textarea id="prompt" rows="2" placeholder="Frage den AI Assistant …  (Strg+Enter sendet)"></textarea>
-        <button id="btnSend" class="btn primary">Senden</button>
+      <div class="hint">Installiert: v1.1.0 &middot; Quelle: github.com/mcathereal/cockpit-ai-assistant</div>
+    </section>
+
+    <footer id="inputbar">
+      <div>
+        <div id="quick">
+          <select id="templateSel" class="btn" title="Chat-Vorlagen fuer Distributionen/Copilot"><option value="">Vorlage&hellip;</option></select>
+          <button class="chip">Warum startet die VM nicht?</button>
+          <button class="chip">Host-Status pr&uuml;fen</button>
+          <button class="chip">Netzwerk-Konfiguration pr&uuml;fen</button>
+          <button class="chip">Letzte Logzeilen analysieren</button>
+        </div>
+        <div class="compose">
+          <textarea id="prompt" rows="3" placeholder="Frage den AI Assistant &hellip;  (Enter sendet, Shift+Enter = neue Zeile)"></textarea>
+          <button id="btnSend" class="btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+            Senden</button>
+        </div>
       </div>
     </footer>
   </div>
