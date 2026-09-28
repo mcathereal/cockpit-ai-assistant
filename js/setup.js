@@ -145,11 +145,11 @@
     };
     $("#btnSkip").onclick = () => {
       try { localStorage.setItem(LS_SETUP, "skipped"); } catch (e) { /* ignore */ }
-      (window.parent || window).postMessage({ mbmSetup: "done" }, window.location.origin);
+      (window.parent || window).postMessage({ aiAssistantSetup: "done" }, window.location.origin);
     };
     $("#btnFinish").onclick = () => {
       try { localStorage.setItem(LS_SETUP, "done"); } catch (e) { /* ignore */ }
-      (window.parent || window).postMessage({ mbmSetup: "done" }, window.location.origin);
+      (window.parent || window).postMessage({ aiAssistantSetup: "done" }, window.location.origin);
     };
   }
 

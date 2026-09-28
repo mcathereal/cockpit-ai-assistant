@@ -1,6 +1,6 @@
 /* AI Assistant - Cockpit-Plugin
- * Design: MBM-Hausstil, uebernommen aus "MBM Call AI" (GitLab mbm/call.ai).
- * Farbtokens als "R G B"-Trippel, Verwendung via rgb(var(--t-*) / alpha).
+ * Design: eigenes Theme mit Farbtokens als "R G B"-Trippel,
+ * Verwendung via rgb(var(--t-*) / alpha).
  * Standard = Dunkel (kein heller Blitz beim Laden), [data-theme="light"] = Hell.
  * MIT License - see LICENSE.
  */
@@ -234,7 +234,7 @@ a { color: rgb(var(--t-accent)); }
 }
 .icon-btn:active { transform: translateY(0); }
 
-/* Theme-Umschalter: passendes Icon je Modus zeigen (wie Call AI). */
+/* Theme-Umschalter: passendes Icon je Modus zeigen. */
 html[data-theme="light"] .icon-moon,
 html:not([data-theme="light"]) .icon-sun { display: none; }
 
@@ -612,7 +612,7 @@ details.tool pre { max-height: 280px; overflow-y: auto; }
 .sh-cm { color: rgb(var(--t-muted)); font-style: italic; }
 .sh-pr { color: rgb(var(--t-bad-fg)); }
 
-/* ------------------------------------------- Turn-Ansicht (MBM Call-AI-Stil) */
+/* ------------------------------------------- Turn-Ansicht (Chat-Verlauf) */
 
 .transcript-full, #chat { display: grid; gap: 8px; }
 

@@ -243,7 +243,7 @@
   window.addEventListener("load", function () {
     setTimeout(function () {
       var h = (location.hash || "").replace("#", "");
-      /* Screenshots zeigen das MBM-Logo; die installierte UI nutzt das neutrale
+      /* Screenshots zeigen das Markenlogo; die installierte UI nutzt das neutrale
        * icon-brain.svg. Hier zurueckgetauscht, damit die Bilder unveraendert bleiben. */
       [].forEach.call(document.querySelectorAll('img[src="icon-brain.svg"]'), function (i) {
         i.src = "icon.svg";

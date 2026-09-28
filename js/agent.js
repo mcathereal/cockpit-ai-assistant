@@ -636,7 +636,7 @@
   const chatEl = $("#chat");
   let busy = false;
 
-  /* Rollen-Icons im MBM-Call-AI-Stil */
+  /* Rollen-Icons fuer den Verlauf */
   const ROLE_ICONS = {
     agent: '<path d="M6.5 13.4V9.9a5.5 5.5 0 0 1 11 0v3.5"/><rect x="3.6" y="12.6" width="3.4" height="5.2" rx="1.7"/><rect x="17" y="12.6" width="3.4" height="5.2" rx="1.7"/><path d="M17.3 19.3a4 4 0 0 1-3.3 1.8h-1.1"/>',
     user: '<circle cx="12" cy="8.2" r="3.7"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/>',
@@ -1266,7 +1266,7 @@
 
   window.addEventListener("message", e => {
     const f = document.querySelector("#setupFrame");
-    if (f && e.source === f.contentWindow && e.data && e.data.mbmSetup === "done") {
+    if (f && e.source === f.contentWindow && e.data && e.data.aiAssistantSetup === "done") {
       f.remove();
       let state = "";
       try { state = localStorage.getItem(LS_SETUP) || ""; } catch (err) { /* ignore */ }
