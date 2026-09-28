@@ -1,1 +1,6 @@
 ai-assistant.tar.gz
+
+# Python-Artefakte (z.B. aus py_compile des MCP-Host-Servers)
+__pycache__/
+*.pyc
+*.pyo
