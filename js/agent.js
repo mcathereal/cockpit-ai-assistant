@@ -33,7 +33,7 @@
     lang: "auto"            // auto | de | en
   };
   let ui = JSON.parse(JSON.stringify(DEFAULT_UI));
-  const VERSION = "1.1.0";
+  const VERSION = "1.2.0";
   const GH_REPO = "mcathereal/cockpit-ai-assistant";
   const TYPEWRITER_SPEED = 18;     // ms pro Zeichen
   let totalTokens = 0;
@@ -346,13 +346,126 @@
     b.id = "fab";
     b.title = "AI Assistant";
     b.innerHTML = '<img src="icon-brain.svg" alt="AI">';
-    b.onclick = () => {
-      const card = document.querySelector("#chat");
-      if (card) card.scrollIntoView({ behavior: "smooth" });
-      const p = $("#prompt");
-      if (p) p.focus();
-    };
+    b.title = "AI Assistant - schwebendes Chat-Fenster oeffnen";
+    b.onclick = () => openChatWindow();
     document.body.appendChild(b);
+  }
+
+  /* ------------- Schwebendes Chat-Fenster (bleibt beim Navigieren offen) ------------- */
+
+  const WIDGET = /[?&]widget=1/.test(location.search);
+  let widgetWin = null;
+
+  function openChatWindow() {
+    if (widgetWin && !widgetWin.closed) { widgetWin.focus(); return; }
+    const url = location.origin + location.pathname + "?widget=1";
+    const w = 460, h = 660;
+    const left = Math.max(20, (window.screen.availWidth || 1200) - w - 30);
+    const top = Math.max(20, (window.screen.availHeight || 800) - h - 60);
+    widgetWin = window.open(url, "ai-assistant-widget", "popup=yes,width=" + w + ",height=" + h + ",left=" + left + ",top=" + top);
+    if (widgetWin) widgetWin.focus();
+    else bubble("sys", "", "Popup wurde blockiert - bitte Popups erlauben. Als Alternative in <b>Darstellung</b> die Kachel-Option waehlen.");
+  }
+
+  function enterWidgetMode() {
+    document.body.classList.add("widget");
+    const bar = $("#widgetbar");
+    if (bar) bar.classList.remove("hidden");
+    const wc = $("#widgetHide");
+    if (wc) wc.onclick = () => window.close();
+    const sel = $("#profileSelect");
+    if (sel) sel.style.display = "none";
+    const p = $("#prompt");
+    if (p) p.focus();
+  }
+
+  /* ---------------------- Bilder/Screenshots fuer VL-Modelle ---------------------- */
+
+  let pendingImages = [];
+
+  function readImageFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error("keine Datei"));
+      const fr = new FileReader();
+      fr.onerror = () => reject(new Error("Bild konnte nicht gelesen werden"));
+      fr.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          try {
+            const max = 1400;
+            let w = im.naturalWidth || 1, h = im.naturalHeight || 1;
+            const s = Math.min(1, max / Math.max(w, h));
+            w = Math.max(1, Math.round(w * s)); h = Math.max(1, Math.round(h * s));
+            const cv = document.createElement("canvas");
+            cv.width = w; cv.height = h;
+            cv.getContext("2d").drawImage(im, 0, 0, w, h);
+            resolve({ name: file.name || "bild.jpg", dataUrl: cv.toDataURL("image/jpeg", 0.78) });
+          } catch (e) { resolve({ name: file.name || "bild", dataUrl: fr.result }); }
+        };
+        im.onerror = () => resolve({ name: file.name || "bild", dataUrl: fr.result });
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  async function addImageFiles(files) {
+    const list = Array.from(files || []).filter(f => /^image\//.test(f.type || "")).slice(0, 4);
+    for (const f of list) {
+      try { pendingImages.push(await readImageFile(f)); } catch (e) { /* ignore */ }
+    }
+    renderAttachments();
+  }
+
+  function renderAttachments() {
+    const strip = $("#attachStrip");
+    const hint = $("#attachHint");
+    if (!strip) return;
+    strip.innerHTML = "";
+    if (!pendingImages.length) {
+      strip.classList.add("hidden");
+      if (hint) hint.textContent = "";
+      return;
+    }
+    strip.classList.remove("hidden");
+    pendingImages.forEach((im, i) => {
+      const d = document.createElement("div");
+      d.className = "attach-item";
+      d.innerHTML = '<img src="' + im.dataUrl + '" alt="" title="' + esc(im.name) + '">';
+      const x = document.createElement("button");
+      x.className = "rm"; x.textContent = "\u00D7"; x.title = "Entfernen";
+      x.onclick = () => { pendingImages.splice(i, 1); renderAttachments(); };
+      d.appendChild(x);
+      strip.appendChild(d);
+    });
+    if (hint) hint.textContent = pendingImages.length + " Bild(er) angehaengt";
+  }
+
+  async function takeScreenshot() {
+    const hint = $("#attachHint");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      if (hint) hint.textContent = "Screenshot wird hier nicht erlaubt (im Popup-Fenster geht es meist).";
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 4 }, audio: false });
+    } catch (e) { if (hint) hint.textContent = "Screenshot abgebrochen."; return; }
+    try {
+      const video = document.createElement("video");
+      video.srcObject = stream; video.muted = true;
+      await video.play();
+      await new Promise(r => setTimeout(r, 260));
+      const cv = document.createElement("canvas");
+      cv.width = video.videoWidth || 1280; cv.height = video.videoHeight || 800;
+      cv.getContext("2d").drawImage(video, 0, 0);
+      pendingImages.push({ name: "screenshot.jpg", dataUrl: cv.toDataURL("image/jpeg", 0.82) });
+      renderAttachments();
+    } catch (e) {
+      if (hint) hint.textContent = "Screenshot fehlgeschlagen.";
+    } finally {
+      stream.getTracks().forEach(t => t.stop());
+    }
   }
 
   function fillAppearance() {
@@ -523,17 +636,47 @@
   const chatEl = $("#chat");
   let busy = false;
 
-  function bubble(cls, who, html) {
+  /* Rollen-Icons im MBM-Call-AI-Stil */
+  const ROLE_ICONS = {
+    agent: '<path d="M6.5 13.4V9.9a5.5 5.5 0 0 1 11 0v3.5"/><rect x="3.6" y="12.6" width="3.4" height="5.2" rx="1.7"/><rect x="17" y="12.6" width="3.4" height="5.2" rx="1.7"/><path d="M17.3 19.3a4 4 0 0 1-3.3 1.8h-1.1"/>',
+    user: '<circle cx="12" cy="8.2" r="3.7"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/>',
+    tool: '<circle cx="12" cy="12" r="3"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/>',
+    event: '<circle cx="12" cy="12" r="9"/><path d="M12 10.9v5.4M12 7.6h.01"/>',
+    error: '<path d="M12 3.5 21.3 19.6H2.7z"/><path d="M12 9.5v4.4M12 17.1h.01"/>'
+  };
+  const ROLE_LABEL = { agent: "Agent", user: "Du", tool: "Tool", event: "Hinweis", error: "Fehler" };
+  const ROLE_CLASS = { agent: "turn-agent", user: "turn-user", tool: "turn-tool", event: "turn-event", error: "turn-error" };
+  const CLS_ROLE = { user: "user", ai: "agent", sys: "event", err: "error", tool: "tool" };
+
+  function roleIcon(k) {
+    return '<svg class="turn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"' +
+      ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ROLE_ICONS[k] || ROLE_ICONS.event) + "</svg>";
+  }
+
+  function turn(parent, role, bodyHtml) {
+    const r = ROLE_CLASS[role] ? role : "event";
     const d = document.createElement("div");
-    d.className = "msg " + cls;
-    d.innerHTML = (who ? '<div class="who">' + who + "</div>" : "") + html;
-    chatEl.appendChild(d);
-    d.scrollIntoView({ behavior: "smooth", block: "end" });
+    d.className = "turn turn-full " + ROLE_CLASS[r];
+    d.innerHTML = roleIcon(r) + '<div class="turn-body"><span class="turn-label">' + ROLE_LABEL[r] + ":</span> " + bodyHtml + "</div>";
+    parent.appendChild(d);
     return d;
   }
 
+  function imgStrip(urls) {
+    if (!urls || !urls.length) return "";
+    return urls.map(u => '<img class="turn-img" src="' + u + '" alt="Anhang">').join("");
+  }
+
+  function bubble(cls, who, html) {
+    const wrap = turn(chatEl, CLS_ROLE[cls] || "event", html);
+    wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+    return wrap.querySelector(".turn-body");
+  }
+
   function toolBubble(title, output) {
-    return bubble("sys", "", '<details class="tool"><summary>&#128295; ' + esc(title) + "</summary><pre>" + esc(output) + "</pre></details>");
+    const wrap = turn(chatEl, "tool", '<details class="turn-details"><summary>' + esc(title) + "</summary><pre>" + esc(output || "") + "</pre></details>");
+    wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+    return wrap.querySelector(".turn-body");
   }
 
   function confirmAction(title, cmd) {
@@ -675,18 +818,19 @@
     const c = activeChat();
     if (!c) return;
     c.messages.forEach(m => {
-      if (m.role === "user") bubbleSilent(el, "user", "Du", mdLite(m.content));
-      else if (m.role === "assistant") {
-        const div = bubbleSilent(el, "ai", "AI Assistant", mdLite(m.content || ""));
-        const t = estimateTokens(m.content || "");
-        const info = document.createElement("div");
-        info.className = "token-info";
-        info.innerHTML = "~" + t + " T";
-        div.appendChild(info);
-        highlightSyntax(div);
+      if (m.role === "user") {
+        turn(el, "user", mdLite(m.content || "") + imgStrip(m.images));
+      } else if (m.role === "assistant") {
+        const body = bubbleSilent(el, "ai", "", mdLite(m.content || ""));
+        const info = document.createElement("span");
+        info.className = "turn-meta";
+        info.textContent = "~" + estimateTokens(m.content || "") + " T";
+        body.appendChild(info);
+        highlightSyntax(body);
         updateTokenBar();
       } else if (m.role === "tool") {
-        bubbleSilent(el, "sys", "", '<details class="tool"><summary>&#128295; ' + esc(m.tool_call_id || "Tool") + "</summary><pre>" + esc(m.content || "") + "</pre></details>");
+        turn(el, "tool", '<details class="turn-details"><summary>' + esc(m.tool_name || m.tool_call_id || "Tool") +
+          "</summary><pre>" + esc(m.content || "") + "</pre></details>");
       }
     });
     const last = el.lastElementChild;
@@ -694,11 +838,8 @@
   }
 
   function bubbleSilent(parent, cls, who, html) {
-    const d = document.createElement("div");
-    d.className = "msg " + cls;
-    d.innerHTML = (who ? '<div class="who">' + who + "</div>" : "") + html;
-    parent.appendChild(d);
-    return d;
+    const wrap = turn(parent, CLS_ROLE[cls] || "event", html);
+    return wrap.querySelector(".turn-body");
   }
 
   function renderChatTabs() {
@@ -768,22 +909,36 @@
     }[p.level];
   }
 
-  async function send(text) {
-    if (busy || !text) return;
+  async function send(text, images) {
+    const imgs = images || [];
+    if (busy || (!text && !imgs.length)) return;
     const p = profile();
     if (p.level === "off") { bubble("sys", "", "Modus ist <b>Aus</b>. In den Einstellungen (Zahnrad) eine Stufe waehlen."); return; }
     const c = activeChat();
     if (!c) return;
-    if (!c.messages.length) { c.title = autoTitle(text); saveChats(); }
+    if (!c.messages.length) { c.title = autoTitle(text || "Bild"); saveChats(); }
     busy = true;
     $("#btnSend").disabled = true;
-    bubble("user", "Du", mdLite(text));
-    c.messages.push({ role: "user", content: text });
+    bubble("user", "Du", mdLite(text) + imgStrip(imgs.map(i => i.dataUrl)));
+    const userContent = imgs.length
+      ? [{ type: "text", text: text || "(Bild ohne Text)" }].concat(imgs.map(i => ({ type: "image_url", image_url: { url: i.dataUrl } })))
+      : text;
+    c.messages.push({ role: "user", content: userContent, images: imgs.map(i => i.dataUrl) });
     trimMessages();
+    if (imgs.length && p.vision === false) {
+      bubble("sys", "", "Dieses Profil ist als <b>nicht bildfaehig</b> markiert. Fuer Bilder in den Einstellungen ein VL-Modell waehlen (z.B. <code>qwen3.8-flash-next</code>) und <b>bildfaehig</b> aktivieren.");
+    }
     try {
       const key = await getKey(p);
       for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-        const body = { model: p.model, temperature: p.temperature, max_tokens: p.maxTokens, top_p: p.topP, messages: [{ role: "system", content: sysPrompt(p) }].concat(c.messages) };
+        const wire = c.messages.map(m => {
+          const o = { role: m.role, content: m.content };
+          if (m.tool_calls) o.tool_calls = m.tool_calls;
+          if (m.tool_call_id) o.tool_call_id = m.tool_call_id;
+          if (m.name) o.name = m.name;
+          return o;
+        });
+        const body = { model: p.model, temperature: p.temperature, max_tokens: p.maxTokens, top_p: p.topP, messages: [{ role: "system", content: sysPrompt(p) }].concat(wire) };
         const toolNames = enabledFor(p);
         if (toolNames.length) body.tools = TOOLS.filter(t => toolNames.indexOf(t.function.name) !== -1);
         const res = await llmChat(p, body, key);
@@ -799,22 +954,22 @@
             const out = await runTool(p, tc.function.name, args);
             const last = chatEl.lastElementChild;
             if (last) last.querySelector("pre").textContent = out;
-            c.messages.push({ role: "tool", tool_call_id: tc.id, content: out });
+            c.messages.push({ role: "tool", tool_call_id: tc.id, tool_name: tc.function.name, content: out });
             saveChats();
           }
           trimMessages();
           continue;
         }
-        const text = msg.content || "(leere Antwort)";
-        const aiBubble = bubble("ai", "AI Assistant", "");
-        typewriter(aiBubble, text, () => {
-          const tokens = estimateTokens(text);
+        const answer = msg.content || "(leere Antwort)";
+        const aiBody = bubble("ai", "AI Assistant", "");
+        typewriter(aiBody, answer, () => {
+          const tokens = estimateTokens(answer);
           totalTokens += tokens;
-          const info = document.createElement("div");
-          info.className = "token-info";
+          const info = document.createElement("span");
+          info.className = "turn-meta";
           info.innerHTML = "~" + tokens + " T · &#8721; " + totalTokens;
-          aiBubble.appendChild(info);
-          highlightSyntax(aiBubble);
+          aiBody.appendChild(info);
+          highlightSyntax(aiBody);
           updateTokenBar();
         });
         break;
@@ -1037,11 +1192,35 @@
     const ks = e => { if (e.key === "Escape" && $("#searchChats")) { $("#searchChats").value = ""; renderChatTabs(); } };
     $("#searchChats").addEventListener("keydown", ks);
 
+    /* Bilder, Screenshots, Anhaenge */
+    $("#btnImage").onclick = () => $("#fileImage").click();
+    $("#fileImage").onchange = e => { addImageFiles(e.target.files); e.target.value = ""; };
+    $("#btnShot").onclick = () => takeScreenshot();
+    $("#prompt").addEventListener("paste", e => {
+      const items = (e.clipboardData && e.clipboardData.items) || [];
+      const files = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === "file" && /^image\//.test(items[i].type || "")) {
+          const f = items[i].getAsFile(); if (f) files.push(f);
+        }
+      }
+      if (files.length) { e.preventDefault(); addImageFiles(files); }
+    });
+    $("#prompt").addEventListener("dragover", e => { e.preventDefault(); $("#prompt").classList.add("drop"); });
+    $("#prompt").addEventListener("dragleave", () => $("#prompt").classList.remove("drop"));
+    $("#prompt").addEventListener("drop", e => {
+      e.preventDefault(); $("#prompt").classList.remove("drop");
+      if (e.dataTransfer && e.dataTransfer.files) addImageFiles(e.dataTransfer.files);
+    });
+
     function submit() {
       const t = $("#prompt").value.trim();
-      if (!t) return;
+      if (!t && !pendingImages.length) return;
       $("#prompt").value = "";
-      send(t);
+      const imgs = pendingImages.slice();
+      pendingImages = [];
+      renderAttachments();
+      send(t, imgs);
     }
   }
 
@@ -1122,6 +1301,7 @@
     wire();
     refreshVms();
     greetIfEmpty();
+    if (WIDGET) { enterWidgetMode(); return; }
     maybeSetup();
     checkUpdate().then(r => { if (r.update) $("#updateBadge").classList.remove("hidden"); });
   });

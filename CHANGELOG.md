@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-28
+
+### Added
+- **Turn-style transcript** (as in *MBM Call AI*): every line is a row with a role icon and a bold label (`Du:`, `Agent:`, `Tool:`, `Hinweis:`, `Fehler:`). Tool output is folded behind a `Tool: …` disclosure, so long command output no longer floods the chat.
+- **Floating chat window**: the bottom-right button opens a small popup (`?widget=1`) that stays open while you navigate Cockpit and shares the same chats. The window has a compact header (open-in-cockpit + close).
+- **Images for VL models**: attach pictures (button, paste, or drag & drop) and capture the current screen with the camera button. Images are sent as native OpenAI multimodal content parts (`image_url` with data URLs) straight to a vision-capable model — the same pattern the Qwen-MM-Plugins `core` plugin uses. Files are downscaled to max 1400 px before sending; the screenshot uses the browser screen-capture, which works best from the popup window.
+
+### Changed
+- Message bubbles restyled to the Call-AI turn layout (role colours, animated entrance, collapsible tool details).
+- The bottom bar is a solid blurred toolbar now (text no longer bleeds through), the confirmation dialog got proper contrast, and the prompt box is more compact.
+
 ## [1.1.0] - 2026-09-28
 
 ### Changed
@@ -79,6 +90,7 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.2.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.1...v1.0.2

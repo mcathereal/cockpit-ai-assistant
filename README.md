@@ -46,6 +46,9 @@ Setup-Dialog (beim ersten Öffnen, überspringbar):
 | **Jede OpenAI-kompatible API** | Ollama, vLLM, OpenRouter, DeepSeek, … Profile komplett in der GUI. |
 | **Key-Sicherheit** | tmpfs-Datei pro Login-User (`chmod 600`) — der Key ist nie im Browser-HTML. |
 | **Redaction** | IPs, Base64-Blobs, `password=`-Zeilen werden vor dem LLM-Call entfernt. |
+| **Turn-Ansicht (Call-AI-Stil)** | Rollen-Icons + Labels (`Du:`, `Agent:`, `Tool:`, `Hinweis:`), Tool-Ausgaben eingeklappt — ruhiger Verlauf. |
+| **Schwebendes Chat-Fenster** | Der Button unten rechts öffnet ein kleines Popup, das beim Navigieren in Cockpit offen bleibt und dieselben Chats nutzt. |
+| **Bilder / VL-Modelle** | Bilder anhängen (Klick, Einfügen oder Hineinziehen) oder den Bildschirm aufnehmen — sie gehen nativ als `image_url` an ein bildfähiges Modell (gleiches Muster wie das Qwen-MM-Plugins-`core`). |
 | **DE/EN + Hell/Dunkel** | Systemsprache/-theme Erkennung, alles später umschaltbar. |
 
 ## Warum dieses Plugin?
@@ -75,7 +78,7 @@ Browser neu laden → Menüpunkt **AI Assistant**. Kein Cockpit-Neustart nötig.
 
 ## Position & Aussehen (später änderbar)
 
-Knopf **◑ (Darstellung)** oben rechts — dort wählst du:
+Knopf **(Darstellung)** oben rechts — dort wählst du:
 
 | Option | Wirkung |
 |---|---|
