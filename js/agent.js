@@ -1231,16 +1231,34 @@
 
   /* ---------------- Updater &amp; Token-Bar ---------------- */
 
+  function cmpVer(a, b) {
+    const x = String(a).split(/[.\-+]/).map(n => parseInt(n, 10) || 0);
+    const y = String(b).split(/[.\-+]/).map(n => parseInt(n, 10) || 0);
+    const n = Math.max(x.length, y.length);
+    for (let i = 0; i < n; i++) {
+      const p = x[i] || 0, q = y[i] || 0;
+      if (q > p) return 1;
+      if (q < p) return -1;
+    }
+    return 0;
+  }
+
   function checkUpdate() {
     const h = cockpit.http({ address: "api.github.com", port: 443, tls: {} });
     return h.request({
       method: "GET",
-      path: "/repos/" + GH_REPO + "/releases/latest",
+      path: "/repos/" + GH_REPO + "/releases?per_page=100",
       headers: { "User-Agent": "cockpit-ai-assistant", "Accept": "application/vnd.github.v3+json" }
     }).then(out => {
-      const j = JSON.parse(out);
-      const latest = (j.tag_name || "").replace(/^v/, "");
-      return latest && latest !== VERSION ? { update: true, version: latest } : { update: false };
+      const list = JSON.parse(out);
+      let best = "";
+      (Array.isArray(list) ? list : []).forEach(r => {
+        const t = String(r.tag_name || "").replace(/^v/, "");
+        if (!t) return;
+        if (!best || cmpVer(best, t) > 0) best = t;
+      });
+      if (!best) best = VERSION;
+      return cmpVer(VERSION, best) > 0 ? { update: true, version: best } : { update: false };
     }).catch(() => ({ update: false }));
   }
 
