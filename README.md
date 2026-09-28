@@ -49,6 +49,7 @@ Setup-Dialog (beim ersten Öffnen, überspringbar):
 | **Turn-Ansicht (Call-AI-Stil)** | Rollen-Icons + Labels (`Du:`, `Agent:`, `Tool:`, `Hinweis:`), Tool-Ausgaben eingeklappt — ruhiger Verlauf. |
 | **Schwebendes Chat-Fenster** | Der Button unten rechts öffnet ein kleines Popup, das beim Navigieren in Cockpit offen bleibt und dieselben Chats nutzt. |
 | **Bilder / VL-Modelle** | Bilder anhängen (Klick, Einfügen oder Hineinziehen) oder den Bildschirm aufnehmen — sie gehen nativ als `image_url` an ein bildfähiges Modell (gleiches Muster wie das Qwen-MM-Plugins-`core`). |
+| **MCP in beide Richtungen** | Fremde MCP-Server im Plugin eintragen (deren Werkzeuge werden mitgenutzt) — und umgekehrt die 12 Host-Tools per `tools/mcp-host-server.py` als eigenen MCP-Server für Claude, opencode & Co. bereitstellen. |
 | **DE/EN + Hell/Dunkel** | Systemsprache/-theme Erkennung, alles später umschaltbar. |
 
 ## Warum dieses Plugin?
@@ -121,6 +122,27 @@ Zahnrad → Profil anlegen → Base-URL + Modell + optional Key → **Stufe** w�
 - `Aktion` — zusätzlich `vm_start` / `vm_shutdown` / `vm_stop`, **jeder** Aufruf mit Bestätigungsdialog.
 
 Feiner: im Profil jede Funktion einzeln an-/ausschalten (Checkbox-Liste).
+
+## MCP (Werkzeuge in beide Richtungen)
+
+**Richtung 1 — fremde Werkzeuge nutzen:** In *LLM-Profile → MCP-Server (Werkzeuge von aussen)* einen
+Streamable-HTTP-Endpunkt (plus optional Bearer-Token, nur lokal im Browser gespeichert) eintragen und
+**Werkzeuge laden**. Die gefundenen Tools werden dem Modell zusätzlich zu den 12 Host-Tools angeboten.
+
+**Richtung 2 — die Host-Tools anderen anbieten:** `tools/mcp-host-server.py` (nur Python-Standardbibliothek)
+veröffentlicht dieselben Tools als MCP-Server:
+
+```bash
+sudo install -m 0755 tools/mcp-host-server.py /usr/local/lib/ai-assistant-mcp/
+sudo mkdir -p /etc/ai-assistant-mcp
+head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' | sudo tee /etc/ai-assistant-mcp/token >/dev/null
+sudo chmod 600 /etc/ai-assistant-mcp/token
+sudo python3 /usr/local/lib/ai-assistant-mcp/mcp-host-server.py \
+  --bind 0.0.0.0 --port 8765 --token-file /etc/ai-assistant-mcp/token
+```
+
+Standard ist **read-only** (Schreib-Tools nur mit `AI_ASSISTANT_MCP_ALLOW_WRITE=1`), und ohne gültigen
+Token antwortet der Server mit `401`.
 
 ## Changelog
 

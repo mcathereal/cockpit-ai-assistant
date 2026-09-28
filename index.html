@@ -159,6 +159,20 @@
         </div>
       </details>
 
+      <details class="advanced">
+        <summary>MCP-Server (Werkzeuge von aussen)</summary>
+        <div class="advanced-body">
+          <div class="hint">Externe <b>MCP-Server</b> (Streamable HTTP) eintragen &mdash; ihre Werkzeuge stehen dem Chat zusaetzlich zur Verfuegung.
+            Token werden nur lokal in diesem Browser gespeichert. Eigene Host-Tools als MCP-Server bereitstellen: <code>tools/mcp-host-server.py</code>.</div>
+          <div id="mcpList"></div>
+          <div class="row">
+            <button id="btnMcpAdd" class="btn">+ Server eintragen</button>
+            <button id="btnMcpReload" class="btn">Werkzeuge laden</button>
+          </div>
+          <div class="hint" id="mcpOut"></div>
+        </div>
+      </details>
+
       <div class="row">
         <button id="btnSave" class="btn primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
@@ -194,7 +208,7 @@
     <main id="chat" aria-live="polite"></main>
 
     <footer class="app-footer">
-      <span class="mono">AI Assistant v1.2.0 &middot; KVM / libvirt</span>
+      <span class="mono">AI Assistant v1.3.0 &middot; KVM / libvirt</span>
       <span class="spacer"></span>
       <a href="https://github.com/mcathereal/cockpit-ai-assistant" target="_blank" rel="noreferrer">GitHub</a>
     </footer>
@@ -207,7 +221,7 @@
           Nach Update suchen</button>
         <span id="updateOut" class="hint"></span>
       </div>
-      <div class="hint">Installiert: v1.2.0 &middot; Quelle: github.com/mcathereal/cockpit-ai-assistant</div>
+      <div class="hint">Installiert: v1.3.0 &middot; Quelle: github.com/mcathereal/cockpit-ai-assistant</div>
     </section>
 
     <footer id="inputbar">

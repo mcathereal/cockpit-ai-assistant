@@ -683,6 +683,17 @@ details.turn-details pre { max-height: 300px; overflow: auto; margin: 7px 0 0; }
 .compose-tools .icon-btn svg { width: 17px; height: 17px; }
 .compose-tools .hint { margin: 0; font-size: 11.5px; }
 
+.mcp-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(160px, 2.2fr) minmax(120px, 1.4fr) auto auto;
+  gap: 6px;
+  align-items: center;
+  margin-top: 7px;
+}
+.mcp-row .mcp-on { font-size: 12.5px; white-space: nowrap; }
+.mcp-row .mcp-on input { margin-right: 4px; }
+@media (max-width: 760px) { .mcp-row { grid-template-columns: 1fr 1fr; } }
+
 .attach-strip { display: flex; flex-wrap: wrap; gap: 8px; }
 .attach-item { position: relative; }
 .attach-item img {

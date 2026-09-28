@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-28
+
+### Added
+- **MCP client in the plugin**: a new *MCP-Server (Werkzeuge von aussen)* section under **LLM-Profile** lets you register external MCP servers (Streamable-HTTP endpoint plus optional bearer token, kept in the browser only). Their tools are fetched with `tools/list` and offered to the model next to the 12 built-in host tools; calls run via `tools/call`. Everything goes through Cockpit's HTTP bridge, so no extra server component is needed on the Cockpit host for this direction.
+- **MCP host tool server** (`tools/mcp-host-server.py`, Python standard library only): publishes the same host tools (virsh, journalctl, dmesg, df/free/uptime/ip, filtered `read_file`) to external MCP clients over Streamable HTTP (JSON-RPC 2.0, `Authorization: Bearer`). Read-only by default — the three write tools are only exposed with `AI_ASSISTANT_MCP_ALLOW_WRITE=1`. Ships with a ready-to-adapt systemd unit; the token lives in a `0600` root-only file.
+
 ## [1.2.0] - 2026-09-28
 
 ### Added
@@ -90,6 +96,7 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.3.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.2...v1.0.3

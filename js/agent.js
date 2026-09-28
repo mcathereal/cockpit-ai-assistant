@@ -33,7 +33,7 @@
     lang: "auto"            // auto | de | en
   };
   let ui = JSON.parse(JSON.stringify(DEFAULT_UI));
-  const VERSION = "1.2.0";
+  const VERSION = "1.3.0";
   const GH_REPO = "mcathereal/cockpit-ai-assistant";
   const TYPEWRITER_SPEED = 18;     // ms pro Zeichen
   let totalTokens = 0;
@@ -379,7 +379,125 @@
     if (p) p.focus();
   }
 
-  /* ---------------------- Bilder/Screenshots fuer VL-Modelle ---------------------- */
+  /* -------------------- MCP: externe Server (Streamable HTTP) -------------------- */
+
+  const LS_MCP = "ai-assistant-mcp";
+  let mcpServers = [];
+  let mcpToolCache = [];
+
+  function loadMcpServers() {
+    try { mcpServers = JSON.parse(localStorage.getItem(LS_MCP) || "[]") || []; } catch (e) { mcpServers = []; }
+    if (!Array.isArray(mcpServers)) mcpServers = [];
+    mcpServers.forEach(s => { if (s.enabled === undefined) s.enabled = true; });
+  }
+
+  function saveMcpServers() {
+    try { localStorage.setItem(LS_MCP, JSON.stringify(mcpServers)); } catch (e) { /* ignore */ }
+  }
+
+  function mcpHttp(s) {
+    const m = /^(https?):\/\/([^/:]+)(?::(\d+))?(\/.*)?$/.exec(String(s.url || "").trim());
+    if (!m) throw new Error("Ungueltige MCP-URL (http(s)://host:port/pfad)");
+    const tls = m[1] === "https";
+    const port = m[3] ? Number(m[3]) : (tls ? 443 : 80);
+    const path = m[4] || "/";
+    const c = tls ? cockpit.http({ address: m[2], port, tls: {} }) : cockpit.http({ address: m[2], port });
+    return { c, path };
+  }
+
+  function sseData(txt) {
+    const t = String(txt || "");
+    if (!/^\s*(event|id|data|retry):/m.test(t)) return t;
+    const out = [];
+    t.split(/\r?\n/).forEach(l => { const mm = /^data:\s?(.*)$/.exec(l); if (mm) out.push(mm[1]); });
+    return out.join("\n") || t;
+  }
+
+  function mcpRpc(s, method, params) {
+    return new Promise((resolve, reject) => {
+      let ctx;
+      try { ctx = mcpHttp(s); } catch (e) { return reject(e); }
+      const headers = { "Content-Type": "application/json", "Accept": "application/json, text/event-stream" };
+      if (s.token) headers.Authorization = "Bearer " + s.token;
+      const body = JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method, params: params || {} });
+      ctx.c.request({ method: "POST", path: ctx.path, headers, body }).then(txt => {
+        let j;
+        try { j = JSON.parse(sseData(txt)); } catch (e) { return reject(new Error("Antwort ist kein JSON-RPC: " + String(txt).slice(0, 160))); }
+        if (j.error) return reject(new Error(j.error.message || "MCP-Fehler"));
+        resolve(j.result || {});
+      }).catch(e => reject(new Error("MCP nicht erreichbar: " + (e.message || e))));
+    });
+  }
+
+  function mcpInit(s) {
+    return mcpRpc(s, "initialize", {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "cockpit-ai-assistant", version: VERSION }
+    });
+  }
+
+  function mcpMappedName(i, name) {
+    return "mcp" + i + "__" + String(name).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 40);
+  }
+
+  function mcpFetchTools() {
+    const list = mcpServers.map((s, i) => ({ s, i })).filter(x => x.s.enabled !== false && x.s.url);
+    mcpToolCache = [];
+    const out = $("#mcpOut");
+    if (!list.length) { if (out) out.textContent = ""; return Promise.resolve(); }
+    if (out) out.textContent = "Lade Werkzeuge von " + list.length + " Server(n)...";
+    return Promise.all(list.map(x =>
+      mcpInit(x.s)
+        .then(() => mcpRpc(x.s, "tools/list", {}))
+        .then(r => ((r && r.tools) || []).forEach(t => mcpToolCache.push({ server: x.i, name: t.name, description: t.description, schema: t.inputSchema })))
+        .catch(e => { if (out) out.textContent = (x.s.name || x.s.url) + ": " + (e.message || e); })
+    )).then(() => { if (out) out.textContent = mcpToolCache.length + " MCP-Werkzeug(e) geladen."; });
+  }
+
+  function mcpOpenAiTools() {
+    return mcpToolCache.filter(t => mcpServers[t.server] && mcpServers[t.server].enabled !== false).map(t => ({
+      type: "function",
+      function: {
+        name: mcpMappedName(t.server, t.name),
+        description: "[" + (mcpServers[t.server].name || "MCP") + "] " + (t.description || t.name),
+        parameters: t.schema || { type: "object", properties: {} }
+      }
+    }));
+  }
+
+  function mcpCallTool(fn, args) {
+    const t = mcpToolCache.filter(x => mcpMappedName(x.server, x.name) === fn)[0];
+    if (!t) return Promise.resolve("Unbekanntes MCP-Werkzeug.");
+    const s = mcpServers[t.server];
+    return mcpInit(s)
+      .then(() => mcpRpc(s, "tools/call", { name: t.name, arguments: args || {} }))
+      .then(r => ((r && r.content) || []).map(c => c.text || JSON.stringify(c)).join("\n") || JSON.stringify(r))
+      .catch(e => "MCP-Fehler: " + (e.message || e));
+  }
+
+  function renderMcp() {
+    const box = $("#mcpList");
+    if (!box) return;
+    box.innerHTML = "";
+    if (!mcpServers.length) { box.innerHTML = '<div class="hint">Noch kein MCP-Server eingetragen.</div>'; return; }
+    mcpServers.forEach((s, i) => {
+      const row = document.createElement("div");
+      row.className = "mcp-row";
+      row.innerHTML =
+        '<input class="mcp-name" placeholder="Name" value="' + esc(s.name || "") + '">' +
+        '<input class="mcp-url" placeholder="https://host:port/mcp" value="' + esc(s.url || "") + '">' +
+        '<input class="mcp-token" type="password" placeholder="Token (optional)" value="' + esc(s.token || "") + '">' +
+        '<label class="mcp-on"><input type="checkbox"' + (s.enabled !== false ? " checked" : "") + '> aktiv</label>' +
+        '<button class="btn" title="Entfernen">&times;</button>';
+      row.querySelector(".mcp-name").oninput = e => { s.name = e.target.value; saveMcpServers(); };
+      row.querySelector(".mcp-url").oninput = e => { s.url = e.target.value; saveMcpServers(); };
+      row.querySelector(".mcp-token").oninput = e => { s.token = e.target.value; saveMcpServers(); };
+      row.querySelector(".mcp-on input").onchange = e => { s.enabled = e.target.checked; saveMcpServers(); mcpFetchTools(); };
+      row.querySelector("button").onclick = () => { mcpServers.splice(i, 1); saveMcpServers(); renderMcp(); mcpFetchTools(); };
+      box.appendChild(row);
+    });
+  }
 
   let pendingImages = [];
 
@@ -734,6 +852,7 @@
   }
 
   async function runTool(p, name, args) {
+    if (/^mcp\d+__/.test(name)) return mcpCallTool(name, args);
     const impl = TOOL_IMPL[name];
     if (!impl) return "Unbekanntes Tool.";
     if (enabledFor(p).indexOf(name) === -1) return "Blockiert: im aktuellen Modus nicht freigegeben.";
@@ -940,7 +1059,8 @@
         });
         const body = { model: p.model, temperature: p.temperature, max_tokens: p.maxTokens, top_p: p.topP, messages: [{ role: "system", content: sysPrompt(p) }].concat(wire) };
         const toolNames = enabledFor(p);
-        if (toolNames.length) body.tools = TOOLS.filter(t => toolNames.indexOf(t.function.name) !== -1);
+        const mcpTools = mcpOpenAiTools();
+        if (toolNames.length || mcpTools.length) body.tools = TOOLS.filter(t => toolNames.indexOf(t.function.name) !== -1).concat(mcpTools);
         const res = await llmChat(p, body, key);
         const msg = res.choices && res.choices[0] && res.choices[0].message;
         if (!msg) throw new Error((res.error && res.error.message) || "Ungueltige LLM-Antwort. Unterstuetzt das Modell Tool-Calling? Sonst Stufe 'Empfehlung' mit kleinerem Modell.");
@@ -1192,6 +1312,10 @@
     const ks = e => { if (e.key === "Escape" && $("#searchChats")) { $("#searchChats").value = ""; renderChatTabs(); } };
     $("#searchChats").addEventListener("keydown", ks);
 
+    /* MCP-Server */
+    $("#btnMcpAdd").onclick = () => { mcpServers.push({ name: "", url: "", token: "", enabled: true }); saveMcpServers(); renderMcp(); };
+    $("#btnMcpReload").onclick = () => mcpFetchTools();
+
     /* Bilder, Screenshots, Anhaenge */
     $("#btnImage").onclick = () => $("#fileImage").click();
     $("#fileImage").onchange = e => { addImageFiles(e.target.files); e.target.value = ""; };
@@ -1309,6 +1433,7 @@
       if (p.redact === undefined) p.redact = true;
     });
     loadUI();
+    loadMcpServers();
     buildFab();
     applyUI();
     loadChats();
@@ -1317,6 +1442,8 @@
     renderProfileSelect();
     fillAppearance();
     wire();
+    renderMcp();
+    mcpFetchTools();
     refreshVms();
     greetIfEmpty();
     if (WIDGET) { enterWidgetMode(); return; }
