@@ -3,6 +3,24 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-09-28
+
+### Fixed
+Security and robustness findings from an automated line-level review of the MCP host server:
+- **`GET` never checked the bearer token** — tool names and server info were readable without auth. Both `GET` and `POST` now require it.
+- An **empty/whitespace token file** made `Authorization: Bearer ` (empty) authenticate. An empty token file now aborts startup instead of failing open.
+- Token comparison is **constant-time** (`hmac.compare_digest`).
+- **`Content-Length` was unbounded** (also on the unauthenticated 401 path) → 1 MiB request cap, refusing larger bodies with `413`.
+- **File reads followed symlinks** out of the allowlist; paths are resolved with `realpath` and must stay inside an allowed prefix.
+- `run()` **ignored the exit code**, so failing commands (e.g. an unknown domain) were reported as normal output. Non-zero exits now return an error and set `isError`.
+- `virsh snapshot-list --hlm` is **not a valid flag** → corrected to `--hwm`.
+- A JSON-RPC `"params"` that is not an object raised an unhandled `AttributeError` → now answered with `-32602`.
+- `read_file` **loaded whole log files** (multi-GB) into memory; it now reads at most the last 256 KiB.
+- The preview mock matched the old `releases/latest` endpoint (dead branch) → it now answers the release list with an array.
+
+### Changed
+- The MCP host server binds to `127.0.0.1` by default and warns when exposed without a token; unknown CLI options are rejected (`exit 2`).
+
 ## [1.3.0] - 2026-09-28
 
 ### Added
@@ -96,6 +114,7 @@ First public release.
 ## [0.5.0] - internal
 - First working agent loop, 4 levels, guided setup as iframe.
 
+[1.3.1]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/mcathereal/cockpit-ai-assistant/compare/v1.0.3...v1.1.0

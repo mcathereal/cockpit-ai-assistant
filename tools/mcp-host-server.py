@@ -7,12 +7,14 @@ the MCP client inside the Cockpit plugin.
 
 Design:
   * stdlib only (http.server + json) - no pip, no build step.
-  * JSON-RPC 2.0 over HTTP POST on one endpoint (default /mcp); replies with
-    application/json. GET returns a short info page.
+  * JSON-RPC 2.0 over HTTP POST on any path; replies with application/json.
+    GET returns a short info page. Both require the bearer token.
   * Read-only by default. Write tools (vm_start/vm_shutdown/vm_stop) are only
     advertised and executed when AI_ASSISTANT_MCP_ALLOW_WRITE=1.
   * Every request must carry  Authorization: Bearer <token>  (unless
     --no-auth is given for local debugging).
+  * Binds to 127.0.0.1 by default. Exposing it on the network (--bind 0.0.0.0)
+    belongs behind TLS (reverse proxy) and a strong, non-empty token.
   * Tool arguments are validated by regex; subprocess is always started with an
     argv list, never through a shell.
 
@@ -22,18 +24,20 @@ Usage:
 
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import re
 import subprocess
 import sys
-import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "cockpit-ai-assistant-host"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
 MAX_OUTPUT = 12000
+MAX_BODY = 1048576          # 1 MiB is plenty for a JSON-RPC request
+TAIL_BYTES = 262144         # never read more than 256 KiB of a file
 RUN_TIMEOUT = 30
 
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:@-]{0,63}$")
@@ -68,7 +72,7 @@ def _tool(name, title, description, props=None, required=None, write=False):
 
 READ_TOOLS = [
     _tool("vm_list", "List VMs", "List all libvirt domains (running and stopped)."),
-    _tool("vm_info", "VM info", "domin-info for one domain.",
+    _tool("vm_info", "VM info", "dominfo for one domain.",
           {"name": {"type": "string", "description": "Domain name"}}, ["name"]),
     _tool("vm_xml", "VM XML", "Filtered `virsh dumpxml` output (identity, cpu, devices, disks, interfaces).",
           {"name": {"type": "string"}}, ["name"]),
@@ -111,8 +115,10 @@ def run(argv):
         return "FEHLER: Befehl nicht gefunden: %s" % argv[0]
     except subprocess.TimeoutExpired:
         return "FEHLER: Zeitueberschreitung"
-    out = (p.stdout or "") + (p.stderr or "")
-    return out[:MAX_OUTPUT] or "(keine Ausgabe)"
+    out = ((p.stdout or "") + (p.stderr or ""))[:MAX_OUTPUT] or "(keine Ausgabe)"
+    if p.returncode != 0:
+        return "FEHLER (exit %d): %s" % (p.returncode, out)
+    return out
 
 
 def tail(text, n):
@@ -127,11 +133,14 @@ def check_name(name):
 
 
 def check_path(path):
-    if not isinstance(path, str) or ".." in path:
+    if not isinstance(path, str) or not path.startswith("/") or "\x00" in path:
         raise ValueError("Ungueltiger Pfad")
-    if not any(path.startswith(p) for p in READ_PREFIXES):
+    if ".." in path.split("/"):
+        raise ValueError("Ungueltiger Pfad")
+    real = os.path.realpath(path)
+    if not any(real == p.rstrip("/") or real.startswith(p) for p in READ_PREFIXES):
         raise ValueError("Pfad nicht erlaubt")
-    return path
+    return real
 
 
 def call_tool(name, args):
@@ -148,7 +157,7 @@ def call_tool(name, args):
         lines = [l for l in raw.splitlines() if any(k in l for k in keep)]
         return "\n".join(lines) or raw[:3000]
     if name == "vm_snapshots":
-        return run(["virsh", "snapshot-list", check_name(args.get("name")), "--hlm"])
+        return run(["virsh", "snapshot-list", check_name(args.get("name")), "--hwm"])
     if name == "vm_console_log":
         dom = check_name(args.get("name"))
         return read_file("/var/log/libvirt/qemu/%s.log" % dom, clamp_int(args.get("tail"), 120, 1, 200))
@@ -181,10 +190,14 @@ def call_tool(name, args):
 
 def read_file(path, n):
     try:
-        with open(path, "r", errors="replace") as fh:
-            return tail(fh.read(), n)
+        size = os.path.getsize(path)
+        with open(path, "rb") as fh:
+            if size > TAIL_BYTES:
+                fh.seek(size - TAIL_BYTES)
+            data = fh.read(TAIL_BYTES)
     except OSError as exc:
         return "FEHLER: %s" % exc
+    return tail(data.decode("utf-8", "replace"), n)
 
 
 def rpc_result(rid, result):
@@ -212,7 +225,11 @@ def handle_rpc(msg):
         tools = [{k: v for k, v in t.items() if not k.startswith("_")} for t in visible_tools()]
         return rpc_result(rid, {"tools": tools})
     if method == "tools/call":
-        params = msg.get("params") or {}
+        params = msg.get("params")
+        if params is None:
+            params = {}
+        if not isinstance(params, dict):
+            return rpc_error(rid, -32602, "params muss ein Objekt sein")
         name = params.get("name")
         tool = next((t for t in visible_tools() if t["name"] == name), None)
         if not tool:
@@ -245,22 +262,40 @@ class Handler(BaseHTTPRequestHandler):
         if body:
             self.wfile.write(body)
 
+    def _reject(self, code, text):
+        """Answer a request that we refuse without reusing the connection."""
+        self.close_connection = True
+        body = json.dumps({"error": text}).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Connection", "close")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _authorized(self):
-        if self.server.token is None:
+        expected = self.server.token
+        if expected is None:
             return True
         header = self.headers.get("Authorization", "")
-        return header == "Bearer " + self.server.token
+        return hmac.compare_digest(header.encode("utf-8"), ("Bearer " + expected).encode("utf-8"))
 
-    def _drain(self):
+    def _drain(self, limit=None):
         """Read and discard the request body so keep-alive stays in sync."""
         try:
             length = int(self.headers.get("Content-Length") or 0)
+            if limit is not None and length > limit:
+                self.close_connection = True
+                return
             if length > 0:
                 self.rfile.read(length)
         except Exception:
             pass
 
     def do_GET(self):
+        if not self._authorized():
+            self._reject(401, "unauthorized")
+            return
         self._send(200, {
             "name": SERVER_NAME,
             "version": SERVER_VERSION,
@@ -272,18 +307,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if not self._authorized():
-            self._drain()
-            self.close_connection = True
-            body = json.dumps({"error": "unauthorized"}).encode("utf-8")
-            self.send_response(401)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Connection", "close")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._drain(limit=MAX_BODY)
+            self._reject(401, "unauthorized")
             return
         try:
             length = int(self.headers.get("Content-Length") or 0)
+        except (TypeError, ValueError):
+            length = 0
+        if length < 0 or length > MAX_BODY:
+            self._drain(limit=MAX_BODY)
+            self._reject(413, "payload too large")
+            return
+        try:
             data = json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, TypeError):
             self._send(400, {"error": "invalid JSON"})
@@ -305,9 +340,10 @@ class Handler(BaseHTTPRequestHandler):
 
 def main(argv):
     port = 8765
-    bind = "0.0.0.0"
-    token = os.environ.get("AI_ASSISTANT_MCP_TOKEN")
+    bind = "127.0.0.1"
+    token = (os.environ.get("AI_ASSISTANT_MCP_TOKEN") or "").strip() or None
     token_file = None
+    no_auth = False
     args = list(argv)
     while args:
         a = args.pop(0)
@@ -318,18 +354,28 @@ def main(argv):
         elif a == "--token-file" and args:
             token_file = args.pop(0)
         elif a == "--no-auth":
-            token = None
-            token_file = None
+            no_auth = True
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
-    if token_file:
+        else:
+            print("Unbekannte Option: %s (siehe --help)" % a, file=sys.stderr)
+            return 2
+    if no_auth:
+        token = None
+        token_file = None
+    elif token_file:
         try:
             with open(token_file) as fh:
-                token = fh.read().strip()
+                token = fh.read().strip() or None
         except OSError as exc:
             print("Token-Datei nicht lesbar: %s" % exc, file=sys.stderr)
             return 1
+        if token is None:
+            print("Token-Datei ist leer - Abbruch (kein stiller Auth-Aus).", file=sys.stderr)
+            return 1
+    if token is None and bind not in ("127.0.0.1", "::1", "localhost"):
+        print("WARNUNG: --bind %s ohne Token - nur fuer lokales Debugging." % bind, file=sys.stderr)
     srv = ThreadingHTTPServer((bind, port), Handler)
     srv.token = token
     srv.daemon_threads = True

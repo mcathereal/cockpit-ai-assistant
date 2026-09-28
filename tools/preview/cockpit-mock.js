@@ -293,8 +293,8 @@
               usage: { total_tokens: 148 }
             }), 400);
           }
-          if (/releases\/latest$/.test(o.path)) {
-            return ok(JSON.stringify({ tag_name: "v1.3.0" }));
+          if (/\/releases(\?|$)/.test(o.path)) {
+            return ok(JSON.stringify([{ tag_name: "v1.3.1" }]));
           }
           return fail("Demo-HTTP: " + o.path);
         }
