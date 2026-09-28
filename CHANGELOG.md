@@ -6,7 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [1.2.0] - 2026-09-28
 
 ### Added
-- **Turn-style transcript**: every line is a row with a role icon and a bold label (`Du:`, `Agent:`, `Tool:`, `Hinweis:`, `Fehler:`). Tool output is folded behind a `Tool: …` disclosure, so long command output no longer floods the chat.
+- **Turn-style transcript** (as in *MBM Call AI*): every line is a row with a role icon and a bold label (`Du:`, `Agent:`, `Tool:`, `Hinweis:`, `Fehler:`). Tool output is folded behind a `Tool: …` disclosure, so long command output no longer floods the chat.
 - **Floating chat window**: the bottom-right button opens a small popup (`?widget=1`) that stays open while you navigate Cockpit and shares the same chats. The window has a compact header (open-in-cockpit + close).
 - **Images for VL models**: attach pictures (button, paste, or drag & drop) and capture the current screen with the camera button. Images are sent as native OpenAI multimodal content parts (`image_url` with data URLs) straight to a vision-capable model — the same pattern the Qwen-MM-Plugins `core` plugin uses. Files are downscaled to max 1400 px before sending; the screenshot uses the browser screen-capture, which works best from the popup window.
 
@@ -17,7 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [1.1.0] - 2026-09-28
 
 ### Changed
-- **New UI with a coherent design system**: shared design tokens as `R G B` triplets (`rgb(var(--t-*) / α)`), panel/line/accent palette for light **and** dark, a soft accent glow, and the Call-AI gradient/sweep header. Theme switching is now a single `data-theme` attribute on `<html>` (dark stays the default, so there is no light flash on load).
+- **New UI in the MBM house style**, adopted from *MBM Call AI* (`mbm/call.ai`): shared design tokens as `R G B` triplets (`rgb(var(--t-*) / α)`), panel/line/accent palette for light **and** dark, a soft accent glow, and the Call-AI gradient/sweep header. Theme switching is now a single `data-theme` attribute on `<html>` (dark stays the default, so there is no light flash on load).
 - **Cleaner, roomier layout**: sticky translucent top bar, 1080 px content column, section cards with soft shadow and a subtle entrance animation, message bubbles that fade/slide in, pill-shaped chat tabs and chips, stronger button variants.
 - **Details moved behind icons and disclosures**: the top bar now carries icon-only controls (theme, settings, appearance, update). Inside *LLM-Profile*, key storage, model loading and sampling/per-tool checkboxes live in collapsible `Erweitert` sections.
 
@@ -76,7 +76,7 @@ First public release.
 - **Chat templates**: 10 built-in prompts (VM won't start, unreachable, network, performance, disk, guest agent, resize, snapshots, host check, distro-aware CoPilot mode).
 - **Token estimates** per answer and a session total; typewriter rendering capped for long answers; minimal shell syntax highlighting in code blocks.
 - **Update check** against the GitHub releases API (badge in the top bar).
-- Full **German/English UI**, dark theme as default plus light theme.
+- Full **German/English UI**, MBM Skyline dark theme as default plus light theme.
 
 ### Security
 - `cockpit.spawn` exclusively with argv arrays — **no shell pipes, no `sh -c` at runtime**.
