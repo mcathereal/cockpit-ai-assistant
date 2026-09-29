@@ -824,7 +824,7 @@
       const lines = x.split("\n");
       return lines.filter(l => keep.some(k => l.includes(k))).join("\n") || x.slice(0, 3000);
     }),
-    vm_snapshots: a => spawn(["virsh", "snapshot-list", checkName(a.name), "--hlm"]),
+    vm_snapshots: a => spawn(["virsh", "snapshot-list", checkName(a.name), "--hwm"]),
     vm_console_log: a => readFileTail("/var/log/libvirt/qemu/" + checkName(a.name) + ".log", clampInt(a.tail, 120, 1, 200)),
     vm_start: a => guarded("VM starten", "virsh start " + checkName(a.name), () => spawn(["virsh", "start", a.name])),
     vm_shutdown: a => guarded("VM geordnet herunterfahren", "virsh shutdown " + checkName(a.name), () => spawn(["virsh", "shutdown", a.name])),

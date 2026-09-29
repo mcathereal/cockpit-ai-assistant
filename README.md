@@ -1,15 +1,17 @@
-# AI Assistant — LLM-Assistent für Red Hat Cockpit (KVM/libvirt)
+# AI Assistant — LLM assistant for Red Hat Cockpit (KVM/libvirt)
+
+**English** | [Deutsch](README.de.md)
 
 <p align="center">
   <img src="icon.svg" width="90" alt="AI Assistant"><br>
-  <b>Von Fans für Cockpit</b> — Tribute an <a href="https://cockpit-project.org">cockpit-project/cockpit</a> und <a href="https://github.com/cockpit-project/cockpit-machines">cockpit-machines</a>.<br>
-  MIT &amp; offen: jeder darf weiterentwickeln. Weniger Code, mehr Stabilität.
+  <b>By fans, for Cockpit</b> — a tribute to <a href="https://cockpit-project.org">cockpit-project/cockpit</a> and <a href="https://github.com/cockpit-project/cockpit-machines">cockpit-machines</a>.<br>
+  MIT &amp; open: anyone may improve it. Less code, more stability.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="#"><img src="https://img.shields.io/badge/Cockpit-%E2%89%A5265-0f6ec9.svg" alt="Cockpit"></a>
-  <a href="#"><img src="https://img.shields.io/badge/no%20build%20step-100%25%20statisch-brightgreen.svg" alt="no build"></a>
+  <a href="#"><img src="https://img.shields.io/badge/no%20build%20step-100%25%20static-brightgreen.svg" alt="no build"></a>
   <a href="#"><img src="https://img.shields.io/badge/PRs-welcome-ccffdd.svg" alt="PRs welcome"></a>
   <a href="https://libvirt.org"><img src="https://img.shields.io/badge/libvirt-QEMU/KVM-6e97c3.svg" alt="libvirt"></a>
   <a href="https://github.com/ShaoRou459/CockpitAgent"><img src="https://img.shields.io/badge/inspired%20by-CockpitAgent-9cf.svg" alt="CockpitAgent"></a>
@@ -17,120 +19,120 @@
 
 ---
 
-## Screenshot
+## Screenshots
 
-| Chat-Ansicht (Befund → Beleg → Befehl) | LLM-Profile & Stufen |
+| Chat view (finding → evidence → command) | LLM profiles & levels |
 |---|---|
-| ![Chat-Ansicht](docs/screenshot-chat.png) | ![Einstellungen](docs/screenshot-settings.png) |
-| **Darstellung & Sprache** | **Aktion mit Bestätigung** |
-| ![Darstellung](docs/screenshot-appearance.png) | ![Bestätigung](docs/screenshot-confirm.png) |
+| ![Chat view](docs/screenshot-chat.png) | ![Settings](docs/screenshot-settings.png) |
+| **Appearance & language** | **Action with confirmation** |
+| ![Appearance](docs/screenshot-appearance.png) | ![Confirmation](docs/screenshot-confirm.png) |
 
-Setup-Dialog (beim ersten Öffnen, überspringbar):
+Setup dialog (on first open, skippable):
 
-![Begleitetes Setup](docs/screenshot-setup.png)
+![Guided setup](docs/screenshot-setup.png)
 
-> Die Bilder stammen von der echten UI. Ohne Cockpit-Host neu erzeugen:
+> The pictures come from the real UI. Regenerate them without a Cockpit host:
 > `powershell -NoProfile -ExecutionPolicy Bypass -File tools/make-screenshots.ps1`
-> (nutzt den installierten Chromium-Browser + `tools/preview/cockpit-mock.js` als Bridge-Ersatz).
+> (uses the installed Chromium browser plus `tools/preview/cockpit-mock.js` as a bridge stand-in).
 
-## Funktionen
+## Features
 
 | | |
 |---|---|
-| **In Cockpit, nicht daneben** | Eigenes Menü-Plugin und/oder schwebende Chat-Kachel — direkt neben "Virtual Machines". |
-| **Empfehlungs-Charakter** | Standard: Befund → Beleg (Log-/XML-Zeile) → exakter, kopierbarer Befehl inkl. Wirkung + Risiko. |
-| **12 Host-Tools statt Freiflug** | `virsh`/`journalctl`/`dmesg`/`df`/`ip` & Co. als benannte Funktionen mit Regex-validierten Argumenten. Keine Shell-Pipes. |
-| **Vier Stufen + Feinjustierung** | `Aus` → `Diagnose` → `Empfehlung` (Default) → `Aktion`. Jede Funktion einzeln abwählbar. |
-| **Begleitetes Setup** | Dialog mit Erklärung, Häkchen und Skip — nichts läuft ohne dein OK. |
-| **Multi-Chat** | Threads mit Suche, Titel-Automatik, Persistenz. |
-| **Jede OpenAI-kompatible API** | Ollama, vLLM, OpenRouter, DeepSeek, … Profile komplett in der GUI. |
-| **Key-Sicherheit** | tmpfs-Datei pro Login-User (`chmod 600`) — der Key ist nie im Browser-HTML. |
-| **Redaction** | IPs, Base64-Blobs, `password=`-Zeilen werden vor dem LLM-Call entfernt. |
-| **Turn-Ansicht (Call-AI-Stil)** | Rollen-Icons + Labels (`Du:`, `Agent:`, `Tool:`, `Hinweis:`), Tool-Ausgaben eingeklappt — ruhiger Verlauf. |
-| **Schwebendes Chat-Fenster** | Der Button unten rechts öffnet ein kleines Popup, das beim Navigieren in Cockpit offen bleibt und dieselben Chats nutzt. |
-| **Bilder / VL-Modelle** | Bilder anhängen (Klick, Einfügen oder Hineinziehen) oder den Bildschirm aufnehmen — sie gehen nativ als `image_url` an ein bildfähiges Modell (gleiches Muster wie das Qwen-MM-Plugins-`core`). |
-| **MCP in beide Richtungen** | Fremde MCP-Server im Plugin eintragen (deren Werkzeuge werden mitgenutzt) — und umgekehrt die 12 Host-Tools per `tools/mcp-host-server.py` als eigenen MCP-Server für Claude, opencode & Co. bereitstellen. |
-| **DE/EN + Hell/Dunkel** | Systemsprache/-theme Erkennung, alles später umschaltbar. |
+| **Inside Cockpit, not beside it** | Own menu plugin and/or floating chat tile — right next to "Virtual Machines". |
+| **Advisory character** | Default: finding → evidence (log/XML line) → exact, copyable command including effect and risk. |
+| **12 host tools instead of free flight** | `virsh`/`journalctl`/`dmesg`/`df`/`ip` & co. as named functions with regex-validated arguments. No shell pipes. |
+| **Four levels + fine tuning** | `off` → `diagnose` → `advisory` (default) → `act`. Every function can be disabled individually. |
+| **Guided setup** | Dialog with explanation, checkbox and skip — nothing runs without your OK. |
+| **Multi-chat** | Threads with search, automatic titles, persistence. |
+| **Any OpenAI-compatible API** | Ollama, vLLM, OpenRouter, DeepSeek, … profiles entirely in the GUI. |
+| **Key safety** | tmpfs file per login user (`chmod 600`) — the key never lives in browser HTML. |
+| **Redaction** | IPs, Base64 blobs and `password=` lines are stripped before the LLM call. |
+| **Turn view (Call-AI style)** | Role icons + labels (`You:`, `Agent:`, `Tool:`, `Note:`), tool output folded — a calmer transcript. |
+| **Floating chat window** | The bottom-right button opens a small popup that stays open while navigating Cockpit and shares the same chats. |
+| **Images / VL models** | Attach images (click, paste or drag & drop) or capture the screen — sent natively as `image_url` to a vision-capable model (same pattern as the Qwen-MM-Plugins `core`). |
+| **MCP in both directions** | Register foreign MCP servers in the plugin (their tools are used too) — and expose the 12 host tools via `tools/mcp-host-server.py` as your own MCP server for Claude, opencode & co. |
+| **DE/EN + light/dark** | System language/theme detection, everything switchable later. |
 
-## Warum dieses Plugin?
+## Why this plugin?
 
-Cockpit ist eine brillante Server-GUI — aber wenn eine VM nicht startet, sitzt man trotzdem vor Logs.
-**AI Assistant** sitzt *in* Cockpit, darf dem Host nur über eine eng definierte Allowlist „hineinschauen“
-und antwortet im **Empfehlungs-Charakter**: Befund → Beleg → kopierbarer Befehl.
-Es ist bewusst *kein* Autopilot. Du bestimmst per **Stufe**, was das LLM tun darf.
+Cockpit is a brilliant server GUI — but when a VM won't start you still stare at logs.
+**AI Assistant** sits *inside* Cockpit, may only "look into" the host through a narrow allowlist,
+and answers in an **advisory** style: finding → evidence → copyable command.
+It is deliberately *not* an autopilot. You decide per **level** what the LLM may do.
 
-Dank `cockpit.http` (Bridge-Proxy) und `cockpit.spawn` (argv-Allowlist + polkit) laufen
-alle Zugriffe über die Cockpit-Schicht — ohne Build-Step, ohne Daemon, ohne Shell-Pipes.
+Thanks to `cockpit.http` (bridge proxy) and `cockpit.spawn` (argv allowlist + polkit), every access
+goes through the Cockpit layer — no build step, no daemon, no shell pipes.
 
-## Einrichten — begleitet, optional, überspringbar
+## Setup — guided, optional, skippable
 
-Das Plugin startet beim ersten Öffnen einen **geführten Setup-Dialog**: jeder Schritt hat eine
-Erklärung, ein Häkchen (mag ich / mag ich nicht) und einen **Skip**-Button. Nichts wird
-ungefragt installiert. Der Dialog lässt sich später über „⚙ Setup starten“ erneut öffnen.
+On first open the plugin starts a **guided setup dialog**: every step has an explanation, a checkbox
+(want / don't want) and a **skip** button. Nothing is installed unasked. The dialog can be reopened
+later via "⚙ Start setup".
 
-Alternativ manuell (1 Befehl):
+Or manually (one command):
 
 ```bash
 git clone https://github.com/mcathereal/cockpit-ai-assistant
 sudo cp -r cockpit-ai-assistant /usr/share/cockpit/ai-assistant
 ```
 
-Browser neu laden → Menüpunkt **AI Assistant**. Kein Cockpit-Neustart nötig.
+Reload the browser → menu entry **AI Assistant**. No Cockpit restart needed.
 
-## Position & Aussehen (später änderbar)
+## Position & appearance (changeable later)
 
-Knopf **(Darstellung)** oben rechts — dort wählst du:
+Button **(Appearance)** top right — there you choose:
 
-| Option | Wirkung |
+| Option | Effect |
 |---|---|
-| Seite &amp; Kachel (empfohlen) | Fester Menüpunkt + schwebendes Chat-Icon |
-| Nur eigene Seite im Menü | Wie cockpit-machines — nur Navigationspunkt |
-| Nur schwebende Kachel | Chat-Icon am Rand, kein Menüpunkt sichtbar |
+| Page &amp; tile (recommended) | Fixed menu entry + floating chat icon |
+| Own page in the menu only | Like cockpit-machines — navigation point only |
+| Floating tile only | Chat icon at the edge, no menu entry visible |
 
-Kachel-Position: unten rechts / unten links / oben rechts / oben links.
-Farbtheme: System/Cockpit folgen, Dunkel (Navy) oder Hell.
-Sprache: System folgen, Deutsch oder Englisch.
+Tile position: bottom right / bottom left / top right / top left.
+Colour theme: follow system/Cockpit, dark (navy) or light.
+Language: follow system, German or English.
 
-Alles lokal in `localStorage` gespeichert — pro Browser, sofort wirksam, ohne Cockpit-Neustart.
+Everything stored locally in `localStorage` — per browser, effective immediately, no Cockpit restart.
 
-## Sicherheitsmodell (Kurzfassung)
+## Security model (short version)
 
-| Ebene | Umsetzung |
+| Layer | Implementation |
 |---|---|
-| **Keys** | **Niemals** im Browser, nie im HTML/JS. Primär: persistente Serverdatei pro Login-User (`/var/lib/cockpit/ai-assistant-keys/<user>.json`, Verzeichnis `0700`, Datei `0600`, überlebt Reboot). Fallback: `localStorage` des Browsers + Warnhinweis. |
-| **LLM-Zugriff** | Stufe `off` / `diagnose` / `advisory` (Default) / `act`. Granular pro Tool abwählbar. Write-Tools (`vm_*`) immer GUI-bestätigt, `superuser:"try"` nur auf deklarierten Pfaden. |
-| **Datenweg** | Tool-Ausgaben werden vor Rückgabe ans LLM **redacted** (Base64-Sequenzen, IPs, `password=`-Zeilen) und auf `tail`-Größen gecappt. |
-| **Stabilität** | spawn-timeout 30 s, LLM-Timeout 120 s, Chat-FIFO (24 Meldungen), jede Fehlerstelle → saubere Fehlerbox statt weißer Bildschirm. |
-| **Kein Freiflug** | Das LLM sieht **niemals** eine Shell. Nur benannte Funktionen mit validierten Argumenten (Regex), feste Schalter, Präfix-Leseliste. |
+| **Keys** | **Never** in the browser, never in HTML/JS. Primary: persistent server file per login user (`/var/lib/cockpit/ai-assistant-keys/<user>.json`, directory `0700`, file `0600`, survives reboot). Fallback: browser `localStorage` plus a warning. |
+| **LLM access** | Levels `off` / `diagnose` / `advisory` (default) / `act`. Granular per tool. Write tools (`vm_*`) always GUI-confirmed, `superuser:"try"` only on declared paths. |
+| **Data path** | Tool output is **redacted** before returning to the LLM (Base64 sequences, IPs, `password=` lines) and capped to `tail` sizes. |
+| **Stability** | spawn timeout 30 s, LLM timeout 120 s, chat FIFO (24 messages), every error site → clean error box instead of a white screen. |
+| **No free flight** | The LLM **never** sees a shell. Only named functions with validated arguments (regex), fixed switches, prefix read-list. |
 
-## LLM-Profile (in der GUI, kein Editieren von Dateien)
+## LLM profiles (in the GUI, no file editing)
 
-Zahnrad → Profil anlegen → Base-URL + Modell + optional Key → **Stufe** wählen → Speichern.
+Gear → create profile → base URL + model + optional key → choose **level** → save.
 
-| Backend | Base-URL | Modell (Tool-Calling) |
+| Backend | Base URL | Model (tool calling) |
 |---|---|---|
-| Ollama (lokal, empfohlen) | `http://127.0.0.1:11434/v1` | `qwen2.5:14b`, `llama3.1` |
-| vLLM | `http://host:8000/v1` | serving-Modell |
-| OpenRouter | `https://openrouter.ai/api/v1` | frei wählbar |
+| Ollama (local, recommended) | `http://127.0.0.1:11434/v1` | `qwen2.5:14b`, `llama3.1` |
+| vLLM | `http://host:8000/v1` | served model |
+| OpenRouter | `https://openrouter.ai/api/v1` | free choice |
 | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| OpenAI-kompatibel | eigene URL | — |
+| OpenAI-compatible | own URL | — |
 
-**Stufen:**
-- `Aus` — Chat sendet nichts ans LLM.
-- `Nur Diagnose` — read-only Werkzeuge, keine Handlungsempfehlung als Befehl.
-- `Empfehlung` (Default) — wie Diagnose, aber mit exaktem Lösungsbefehl + Risiko-Abschätzung.
-- `Aktion` — zusätzlich `vm_start` / `vm_shutdown` / `vm_stop`, **jeder** Aufruf mit Bestätigungsdialog.
+**Levels:**
+- `off` — the chat sends nothing to the LLM.
+- `diagnose only` — read-only tools, no action recommendation as a command.
+- `advisory` (default) — like diagnose, plus an exact fix command and a risk estimate.
+- `act` — additionally `vm_start` / `vm_shutdown` / `vm_stop`, **every** call with a confirmation dialog.
 
-Feiner: im Profil jede Funktion einzeln an-/ausschalten (Checkbox-Liste).
+Finer: switch each function on/off individually in the profile (checkbox list).
 
-## MCP (Werkzeuge in beide Richtungen)
+## MCP (tools in both directions)
 
-**Richtung 1 — fremde Werkzeuge nutzen:** In *LLM-Profile → MCP-Server (Werkzeuge von aussen)* einen
-Streamable-HTTP-Endpunkt (plus optional Bearer-Token, nur lokal im Browser gespeichert) eintragen und
-**Werkzeuge laden**. Die gefundenen Tools werden dem Modell zusätzlich zu den 12 Host-Tools angeboten.
+**Direction 1 — use foreign tools:** In *LLM profiles → MCP servers (tools from outside)* enter a
+Streamable-HTTP endpoint (plus optional bearer token, stored only in the browser) and click
+**Load tools**. The discovered tools are offered to the model in addition to the 12 host tools.
 
-**Richtung 2 — die Host-Tools anderen anbieten:** `tools/mcp-host-server.py` (nur Python-Standardbibliothek)
-veröffentlicht dieselben Tools als MCP-Server:
+**Direction 2 — offer the host tools to others:** `tools/mcp-host-server.py` (Python standard library only)
+publishes the same tools as an MCP server:
 
 ```bash
 sudo install -m 0755 tools/mcp-host-server.py /usr/local/lib/ai-assistant-mcp/
@@ -141,47 +143,46 @@ sudo python3 /usr/local/lib/ai-assistant-mcp/mcp-host-server.py \
   --bind 0.0.0.0 --port 8765 --token-file /etc/ai-assistant-mcp/token
 ```
 
-Standard ist **read-only** (Schreib-Tools nur mit `AI_ASSISTANT_MCP_ALLOW_WRITE=1`), und ohne gültigen
-Token antwortet der Server mit `401`.
+Default is **read-only** (write tools only with `AI_ASSISTANT_MCP_ALLOW_WRITE=1`), and without a valid
+token the server answers `401`.
 
 ## Changelog
 
-Siehe [CHANGELOG.md](CHANGELOG.md) — SemVer, Keep-a-Changelog-Format.
+See [CHANGELOG.md](CHANGELOG.md) — SemVer, Keep-a-Changelog format.
 
-## Mitmachen — so wie Cockpit es uns vormacht
+## Contributing — the way Cockpit shows us
 
-Wir sind Cockpit-**Fans** und verstehen dieses Plugin als Tribut an die
-[cockpit-project](https://github.com/cockpit-project/cockpit)-Community (und als Anstoß an
-[cockpit-machines](https://github.com/cockpit-project/cockpit-machines), mal über einen
-LLM-Kontext-Knopf nachzudenken). Wenn du eine Idee hast:
+We are Cockpit **fans** and understand this plugin as a tribute to the
+[cockpit-project](https://github.com/cockpit-project/cockpit) community (and as a nudge to
+[cockpit-machines](https://github.com/cockpit-project/cockpit-machines) to think about an
+LLM context button). If you have an idea:
 
-1. Fork → Branch `feature/...`
-2. `node --check ai-assistant/js/agent.js` (kein Build sonst)
-3. PR — wir Reviewen mit dem Ziel „weniger Code, mehr Stabilität“
+1. Fork → branch `feature/...`
+2. `node --check ai-assistant/js/agent.js` (no other build)
+3. PR — we review with the goal "less code, more stability"
 
-**Guidelines:** keine Build-Tools, keine npm-Dependencies, kein externer CDN-Laden,
-alles `superuser`-relevante muss in `manifest.json` deklariert sein.
+**Guidelines:** no build tools, no npm dependencies, no external CDN loads,
+everything `superuser`-relevant must be declared in `manifest.json`.
 
-## Dank
+## Thanks
 
-An die **cockpit-project**-Leute: Dass eine Server-GUI so sauber erweiterbar ist — `spawn`,
-`http`, `manifest.json`, keine Build-Pflicht — ist der eigentliche Grund, warum dieses Plugin
-überhaupt in wenigen Tagen entstehen konnte. Ihr habt die Brücken gebaut; wir haben nur
-einen Chat daneben gesetzt.
+To the **cockpit-project** people: that a server GUI is this cleanly extensible — `spawn`,
+`http`, `manifest.json`, no build requirement — is the real reason this plugin could exist in a
+few days. You built the bridges; we just put a chat next to them.
 
-Ebenso danke an die **cockpit-machines**-Maintainer: deren Code-Lesart (`libvirt-dbus`,
-Tool-Namensgebung, Bestätigungsdialoge) war stiller Leitfaden für jedes Tool hier.
+Also thanks to the **cockpit-machines** maintainers: their way of reading code (`libvirt-dbus`,
+tool naming, confirmation dialogs) was the silent guide for every tool here.
 
-Und danke an [CockpitAgent](https://github.com/ShaoRou459/CockpitAgent): der frühe Beweis,
-dass AI in Cockpit kein Fremdkörper sein muss.
+And thanks to [CockpitAgent](https://github.com/ShaoRou459/CockpitAgent): the early proof that
+AI in Cockpit is not a foreign body.
 
-## Inspiration & Tribute
+## Inspiration & tribute
 
-- [cockpit-project/cockpit](https://github.com/cockpit-project/cockpit) — API/Design-Vorbild
-- [cockpit-machines](https://github.com/cockpit-project/cockpit-machines) — die VM-GUI, die wir lieben
-- [cockpit-project.org/guide](https://cockpit-project.org/guide/latest/) — Bridge/`spawn`/`http` dokumentiert
-- [CockpitAgent](https://github.com/ShaoRou459/CockpitAgent) — früher Proof, dass AI-in-Cockpit geht
+- [cockpit-project/cockpit](https://github.com/cockpit-project/cockpit) — API/design role model
+- [cockpit-machines](https://github.com/cockpit-project/cockpit-machines) — the VM GUI we love
+- [cockpit-project.org/guide](https://cockpit-project.org/guide/latest/) — documents bridge/`spawn`/`http`
+- [CockpitAgent](https://github.com/ShaoRou459/CockpitAgent) — early proof that AI-in-Cockpit works
 
 ## License
 
-[MIT](LICENSE) © 2026 Marcel Weise. Teilen, verbessen, forken erwünscht.
+[MIT](LICENSE) © 2026 Marcel Weise. Sharing, improving and forking welcome.
