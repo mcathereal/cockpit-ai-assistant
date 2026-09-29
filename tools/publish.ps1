@@ -7,7 +7,9 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish.ps1 -Message "..." -Tag
     powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish.ps1 -Message "..." -Tag -History
 
-  Bricht ab, wenn tools\scan-secrets.ps1 harte Treffer findet.
+  Bricht ab, wenn das LOKALE Review-Skript tools\.local\scan-secrets.ps1 fehlt oder
+  harte Treffer findet. Das Skript liegt bewusst nicht im Repo (es enthaelt interne
+  Infrastruktur-Muster) und wird per .gitignore ausgeschlossen.
 #>
 param(
   [Parameter(Mandatory = $true)][string]$Message,
@@ -23,7 +25,12 @@ $repo = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repo
 
 Write-Output "== 1/4 Review (scan-secrets) =="
-$scanArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'scan-secrets.ps1'))
+$scanFile = Join-Path $PSScriptRoot '.local\scan-secrets.ps1'
+if (-not (Test-Path -LiteralPath $scanFile)) {
+  Write-Output "ABBRUCH: lokales Review-Skript tools/.local/scan-secrets.ps1 fehlt - nicht publishen."
+  exit 1
+}
+$scanArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $scanFile)
 if ($History) { $scanArgs += '-History' }
 if ($Strict) { $scanArgs += '-Strict' }
 & powershell @scanArgs
